@@ -1,0 +1,133 @@
+# Resource Quota for Secure Namespace
+# Limits resource consumption to prevent resource exhaustion attacks
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: compute-quota
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: resource-management
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  hard:
+    # Compute resources
+    requests.cpu: "4"      # Total CPU requests
+    requests.memory: 8Gi   # Total memory requests
+    limits.cpu: "8"        # Total CPU limits
+    limits.memory: 16Gi    # Total memory limits
+    
+    # Storage resources
+    requests.storage: 50Gi # Total storage requests
+    persistentvolumeclaims: "5"  # Maximum PVCs
+    
+    # Object counts
+    pods: "20"             # Maximum pods
+    services: "10"         # Maximum services
+    secrets: "15"          # Maximum secrets
+    configmaps: "15"       # Maximum configmaps
+    
+    # Load balancer limits
+    services.loadbalancers: "2"
+    services.nodeports: "3"
+
+---
+# Resource Quota for Quality of Service Classes
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: qos-quota
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: resource-management
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  hard:
+    # Limit pods by QoS class to ensure proper resource planning
+    count/pods.burstable: "15"   # Pods with requests < limits
+    count/pods.guaranteed: "5"   # Pods with requests = limits
+    # Best effort pods (no requests/limits) are discouraged for production
+
+---
+# Network Policy Resource Quota
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: network-quota
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: resource-management
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  hard:
+    # Network resources
+    services: "10"
+    services.loadbalancers: "2"
+    services.nodeports: "3"
+    ingresses.networking.k8s.io: "5"
+
+---
+# LimitRange to enforce default resource constraints
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: resource-limits
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: resource-management
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  limits:
+  # Container limits
+  - type: Container
+    default:        # Default limits (if not specified)
+      cpu: 500m
+      memory: 512Mi
+    defaultRequest: # Default requests (if not specified)
+      cpu: 100m
+      memory: 128Mi
+    max:           # Maximum allowed
+      cpu: 2
+      memory: 4Gi
+    min:           # Minimum required
+      cpu: 50m
+      memory: 64Mi
+    maxLimitRequestRatio:  # Max ratio of limit to request
+      cpu: 4       # limit can be max 4x the request
+      memory: 2    # limit can be max 2x the request
+  
+  # Pod limits (sum of all containers)
+  - type: Pod
+    max:
+      cpu: 4
+      memory: 8Gi
+    min:
+      cpu: 100m
+      memory: 128Mi
+  
+  # PVC limits
+  - type: PersistentVolumeClaim
+    max:
+      storage: 10Gi
+    min:
+      storage: 1Gi
+
+---
+# Storage Class Resource Quota (if using specific storage classes)
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: storage-quota
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: resource-management
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  hard:
+    # Total storage by class
+    ssd.storageclass.storage.k8s.io/requests.storage: 20Gi
+    hdd.storageclass.storage.k8s.io/requests.storage: 50Gi
+    
+    # PVC counts by storage class
+    ssd.storageclass.storage.k8s.io/persistentvolumeclaims: "3"
+    hdd.storageclass.storage.k8s.io/persistentvolumeclaims: "5"

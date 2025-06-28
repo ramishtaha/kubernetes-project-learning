@@ -1,0 +1,164 @@
+# Default Deny All Network Policy
+# This policy denies all ingress and egress traffic by default
+# Specific policies should be created to allow required traffic
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  podSelector: {}  # Applies to all pods in the namespace
+  policyTypes:
+  - Ingress
+  - Egress
+  # No ingress or egress rules defined = deny all
+
+---
+# Allow DNS resolution (required for most applications)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+
+---
+# Allow intra-namespace communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-intra-namespace
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: secure-namespace
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: secure-namespace
+
+---
+# Allow web application access (example for frontend pods)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-web-access
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  podSelector:
+    matchLabels:
+      app: web-frontend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx  # Allow from ingress controller
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: api-backend
+    ports:
+    - protocol: TCP
+      port: 3000
+
+---
+# Allow API backend external access (example for backend pods)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-external
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  podSelector:
+    matchLabels:
+      app: api-backend
+  policyTypes:
+  - Egress
+  egress:
+  - to: []  # Allow all external traffic
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 5432  # PostgreSQL (example)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: database
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+# Database isolation policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: database-isolation
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  podSelector:
+    matchLabels:
+      app: database
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: api-backend
+    ports:
+    - protocol: TCP
+      port: 5432
+  egress:
+  - to: []  # DNS resolution
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53

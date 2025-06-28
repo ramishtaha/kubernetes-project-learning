@@ -28,12 +28,13 @@ All **16 Kubernetes projects** have been successfully created with complete stru
 14. **Security & RBAC** - Pod security, network policies, RBAC
 15. **Disaster Recovery** - Backup, restore, Velero integration
 
-### 📂 Advanced Projects (5/5)
+### 📂 Advanced Projects (6/6)
 21. **Multi-cluster Management** - Cluster API, cross-cluster networking
 22. **Custom Controllers** - CRDs, operators, custom resources
 23. **ML Pipeline** - Kubeflow, Jupyter, ML workflows
 24. **Edge Computing** - K3s, IoT workloads, edge applications
 25. **Enterprise Platform** - Multi-tenancy, governance, platform engineering
+26. **Security Hardening** - Admission controllers, Pod Security Standards, Kyverno
 
 ## 📋 Component Verification
 
@@ -44,10 +45,10 @@ All **16 Kubernetes projects** have been successfully created with complete stru
 - ✅ **Supporting directories** - Project-specific folders (rbac/, security/, jenkins/, etc.)
 
 ### Total Files Created:
-- **README files**: 15 project READMEs + 1 main + supporting docs
-- **Manifest files**: 65+ YAML files across all projects
-- **Script files**: 30+ deployment/cleanup scripts
-- **Supporting files**: 20+ specialized configurations
+- **README files**: 16 project READMEs + 1 main + supporting docs
+- **Manifest files**: 75+ YAML files across all projects
+- **Script files**: 35+ deployment/cleanup scripts
+- **Supporting files**: 25+ specialized configurations
 
 ## 🎯 Learning Path Features
 

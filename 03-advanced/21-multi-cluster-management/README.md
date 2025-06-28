@@ -1,8 +1,12 @@
-# Project 11: Multi-Cluster Management 🌐
+# 🌐 Project 21: Multi-Cluster Management
 
 **Difficulty**: 🔴 Advanced  
 **Time Estimate**: 6-8 hours  
-**Prerequisites**: Projects 1-10 completed  
+**Prerequisites**: Projects 01-15 completed, advanced Kubernetes knowledge  
+
+## 📋 Overview
+
+Build and manage a sophisticated multi-cluster Kubernetes platform! This project demonstrates how to use Cluster API for cluster lifecycle management, implement cross-cluster service communication, and deploy multi-cluster service mesh. You'll learn enterprise-grade cluster management patterns and disaster recovery strategies.
 
 ## 🎯 Learning Objectives
 
@@ -13,6 +17,7 @@ By the end of this project, you will:
 - Set up cluster federation and workload distribution
 - Implement disaster recovery across clusters
 - Monitor and observe multi-cluster environments
+- Learn cluster lifecycle automation and governance
 
 ## 📋 Project Overview
 

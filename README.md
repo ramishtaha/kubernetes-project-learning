@@ -66,6 +66,7 @@ Enterprise-grade scenarios and complex architectures.
 | [23-ML-Pipeline](./03-advanced/23-ml-pipeline/) | Machine learning workflow on K8s | Kubeflow, Model Serving, GPU Scheduling |
 | [24-Edge-Computing](./03-advanced/24-edge-computing/) | Edge and IoT deployments | K3s, Edge Computing Patterns |
 | [25-Enterprise-Platform](./03-advanced/25-enterprise-platform/) | Complete enterprise platform | Multi-tenancy, Cost Management, Governance |
+| [26-Security-Hardening](./03-advanced/26-security-hardening/) | Comprehensive cluster security | Admission Controllers, Pod Security, Kyverno |
 
 ## 🛠️ Prerequisites
 

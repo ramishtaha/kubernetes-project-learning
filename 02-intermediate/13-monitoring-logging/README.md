@@ -1,16 +1,23 @@
-# Project 8: Monitoring and Logging
+# 📊 Project 13: Monitoring and Logging
 
-## Learning Objectives
+**Difficulty**: 🟡 Intermediate  
+**Time Estimate**: 3-4 hours  
+**Prerequisites**: Projects 01-12 completed, basic observability concepts  
+
+## 📋 Overview
+
+Implement comprehensive monitoring and logging for your Kubernetes applications! This project demonstrates how to deploy Prometheus for metrics collection, Grafana for visualization, and centralized logging with the ELK/EFK stack. You'll learn essential observability practices for production systems.
+
+## 🎯 Learning Objectives
+
+By the end of this project, you will:
 - Deploy Prometheus for metrics collection
-- Set up Grafana for visualization
+- Set up Grafana for visualization and dashboards
 - Implement centralized logging with ELK/EFK stack
 - Configure alerting and notification systems
 - Monitor application and cluster health
-
-## Prerequisites
-- Completed Projects 1-7
-- Understanding of observability concepts
-- Basic knowledge of time-series databases
+- Learn log aggregation and analysis patterns
+- Understand observability best practices
 
 ## Architecture Overview
 ```

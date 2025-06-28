@@ -1,0 +1,59 @@
+# Secure Namespace Configuration
+# This namespace is configured with Pod Security Standards and resource quotas
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secure-namespace
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/audit: restricted  
+    pod-security.kubernetes.io/warn: restricted
+    security.hardening/enabled: "true"
+    environment: production
+  annotations:
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit-version: latest
+    pod-security.kubernetes.io/warn-version: latest
+    description: "Namespace with enforced security policies and network isolation"
+
+---
+# Service Account for secure workloads
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: secure-workload-sa
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: security-hardening
+automountServiceAccountToken: false  # Disable automatic token mounting for security
+
+---
+# Role with minimal required permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: secure-namespace
+  name: secure-workload-role
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list"]
+  resourceNames: ["app-config", "app-secret"]  # Restrict to specific resources
+
+---
+# RoleBinding to associate ServiceAccount with Role
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: secure-workload-binding
+  namespace: secure-namespace
+subjects:
+- kind: ServiceAccount
+  name: secure-workload-sa
+  namespace: secure-namespace
+roleRef:
+  kind: Role
+  name: secure-workload-role
+  apiGroup: rbac.authorization.k8s.io

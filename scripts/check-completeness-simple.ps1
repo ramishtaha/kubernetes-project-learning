@@ -72,5 +72,6 @@ Test-ProjectStructure "$BASE_DIR\03-advanced\22-custom-controllers" "Project 22:
 Test-ProjectStructure "$BASE_DIR\03-advanced\23-ml-pipeline" "Project 23: ML Pipeline"
 Test-ProjectStructure "$BASE_DIR\03-advanced\24-edge-computing" "Project 24: Edge Computing"
 Test-ProjectStructure "$BASE_DIR\03-advanced\25-enterprise-platform" "Project 25: Enterprise Platform"
+Test-ProjectStructure "$BASE_DIR\03-advanced\26-security-hardening" "Project 26: Security Hardening"
 
 Write-Host "Completeness check finished!" -ForegroundColor Cyan

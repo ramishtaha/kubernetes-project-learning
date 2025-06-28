@@ -1,17 +1,23 @@
-# Project 14: Edge Computing and IoT with Kubernetes
+# 🌐 Project 24: Edge Computing and IoT with Kubernetes
 
-## Learning Objectives
+**Difficulty**: 🔴 Advanced  
+**Time Estimate**: 6-8 hours  
+**Prerequisites**: Projects 01-23 completed, edge computing concepts, IoT basics  
+
+## 📋 Overview
+
+Deploy Kubernetes at the edge for IoT and distributed computing! This project demonstrates how to use K3s and MicroK8s for edge deployments, implement IoT device management, and create edge-to-cloud connectivity patterns. You'll learn to handle resource-constrained environments and offline-first applications.
+
+## 🎯 Learning Objectives
+
+By the end of this project, you will:
 - Deploy Kubernetes at the edge with K3s and MicroK8s
 - Implement IoT device management and orchestration
-- Configure edge-to-cloud connectivity
-- Manage distributed edge deployments
-- Handle offline-first applications and data sync
-
-## Prerequisites
-- Completed Projects 1-13
-- Understanding of edge computing concepts
-- Basic knowledge of IoT protocols (MQTT, CoAP)
-- Familiarity with resource-constrained environments
+- Configure edge-to-cloud connectivity and data sync
+- Manage distributed edge deployments at scale
+- Handle offline-first applications and intermittent connectivity
+- Learn edge-specific security and networking patterns
+- Understand resource optimization for constrained environments
 
 ## Architecture Overview
 ```

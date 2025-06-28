@@ -1,16 +1,23 @@
-# Project 9: Security and RBAC
+# 🔒 Project 14: Security and RBAC
 
-## Learning Objectives
+**Difficulty**: 🟡 Intermediate  
+**Time Estimate**: 3-4 hours  
+**Prerequisites**: Projects 01-13 completed, basic security concepts  
+
+## 📋 Overview
+
+Implement comprehensive security controls for your Kubernetes cluster! This project demonstrates Role-Based Access Control (RBAC), Pod Security Standards, Network Policies, and secrets management. You'll learn essential security practices for production Kubernetes environments.
+
+## 🎯 Learning Objectives
+
+By the end of this project, you will:
 - Implement Role-Based Access Control (RBAC)
-- Configure Pod Security Standards
+- Configure Pod Security Standards for workload security
 - Set up Network Policies for micro-segmentation
-- Implement secrets management
+- Implement secrets management and encryption
 - Configure security contexts and admission controllers
-
-## Prerequisites
-- Completed Projects 1-8
-- Understanding of Kubernetes security model
-- Basic knowledge of authentication and authorization
+- Learn user and service account management
+- Understand cluster security best practices
 
 ## Architecture Overview
 ```

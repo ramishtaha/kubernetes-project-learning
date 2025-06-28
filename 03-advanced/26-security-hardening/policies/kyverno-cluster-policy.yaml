@@ -1,0 +1,351 @@
+# Kyverno Cluster Policies for Security Hardening
+# These policies enforce security best practices across the cluster
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-pod-resources
+  annotations:
+    policies.kyverno.io/title: Require Pod Resources
+    policies.kyverno.io/category: Resource Management
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Pods should specify resource requests and limits to ensure proper
+      scheduling and prevent resource exhaustion attacks.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-pod-resources
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+        clusterRoles:
+        - "cluster-admin"
+        subjects:
+        - kind: User
+          name: "*"
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+          - kyverno
+          - cert-manager
+    validate:
+      message: "Pod must specify resource requests and limits"
+      pattern:
+        spec:
+          containers:
+          - name: "*"
+            resources:
+              requests:
+                memory: "?*"
+                cpu: "?*"
+              limits:
+                memory: "?*"
+                cpu: "?*"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged-containers
+  annotations:
+    policies.kyverno.io/title: Disallow Privileged Containers
+    policies.kyverno.io/category: Pod Security Standards (Baseline)
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Privileged containers have access to all host capabilities and devices.
+      This policy ensures containers do not run in privileged mode.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-privileged
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+    validate:
+      message: "Privileged containers are not allowed"
+      pattern:
+        spec:
+          =(securityContext):
+            =(privileged): "false"
+          containers:
+          - name: "*"
+            =(securityContext):
+              =(privileged): "false"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-host-namespaces
+  annotations:
+    policies.kyverno.io/title: Disallow Host Namespaces
+    policies.kyverno.io/category: Pod Security Standards (Baseline)
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Host namespaces (Process ID namespace, Inter-Process Communication 
+      namespace, and network namespace) allow access to shared information 
+      and can be used to elevate privileges.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-host-namespaces
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+    validate:
+      message: "Sharing the host namespaces is not allowed"
+      pattern:
+        spec:
+          =(hostNetwork): "false"
+          =(hostIPC): "false"
+          =(hostPID): "false"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-non-root-user
+  annotations:
+    policies.kyverno.io/title: Require Non-Root User
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Containers should run as non-root user to minimize the impact
+      of container escape vulnerabilities.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-non-root
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+        namespaces:
+        - secure-namespace
+    validate:
+      message: "Containers must run as non-root user"
+      anyPattern:
+      - spec:
+          securityContext:
+            runAsNonRoot: true
+      - spec:
+          containers:
+          - name: "*"
+            securityContext:
+              runAsNonRoot: true
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-capabilities
+  annotations:
+    policies.kyverno.io/title: Restrict Capabilities
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Containers should drop all capabilities and only add specific ones
+      if absolutely necessary.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-capabilities
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+        namespaces:
+        - secure-namespace
+    validate:
+      message: "Containers must drop ALL capabilities and not add dangerous ones"
+      pattern:
+        spec:
+          containers:
+          - name: "*"
+            securityContext:
+              capabilities:
+                drop:
+                - ALL
+                =(add):
+                - "!SYS_ADMIN"
+                - "!SYS_TIME"
+                - "!NET_ADMIN"
+                - "!SYS_MODULE"
+                - "!SYS_RAWIO"
+                - "!SYS_PTRACE"
+                - "!DAC_OVERRIDE"
+                - "!SETUID"
+                - "!SETGID"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-read-only-root-filesystem
+  annotations:
+    policies.kyverno.io/title: Require Read-Only Root Filesystem
+    policies.kyverno.io/category: Pod Security Standards (Restricted)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Containers should use a read-only root filesystem to prevent
+      runtime modification of the container image.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-readonly-root
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+        namespaces:
+        - secure-namespace
+    validate:
+      message: "Containers must use read-only root filesystem"
+      pattern:
+        spec:
+          containers:
+          - name: "*"
+            securityContext:
+              readOnlyRootFilesystem: true
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privilege-escalation
+  annotations:
+    policies.kyverno.io/title: Disallow Privilege Escalation
+    policies.kyverno.io/category: Pod Security Standards (Baseline)
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Privilege escalation allows a process to change the security context
+      under which it is running. This should be disabled.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-privilege-escalation
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+    validate:
+      message: "Privilege escalation is not allowed"
+      pattern:
+        spec:
+          containers:
+          - name: "*"
+            securityContext:
+              allowPrivilegeEscalation: false
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-pod-labels
+  annotations:
+    policies.kyverno.io/title: Require Pod Labels
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: low
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Pods should have required labels for proper organization,
+      monitoring, and network policy enforcement.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-required-labels
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+        namespaces:
+        - secure-namespace
+    validate:
+      message: "Pods must have required labels: app, version, environment"
+      pattern:
+        metadata:
+          labels:
+            app: "?*"
+            version: "?*"
+            environment: "?*"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: generate-network-policy
+  annotations:
+    policies.kyverno.io/title: Generate Default Network Policy
+    policies.kyverno.io/category: Networking
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Namespace
+    policies.kyverno.io/description: >-
+      Automatically generate a default-deny network policy for new namespaces
+      with specific labels.
+spec:
+  background: true
+  rules:
+  - name: generate-default-deny
+    match:
+      any:
+      - resources:
+          kinds:
+          - Namespace
+          selector:
+            matchLabels:
+              security.hardening/enabled: "true"
+    generate:
+      kind: NetworkPolicy
+      name: default-deny-all
+      namespace: "{{ request.object.metadata.name }}"
+      synchronize: true
+      data:
+        spec:
+          podSelector: {}
+          policyTypes:
+          - Ingress
+          - Egress

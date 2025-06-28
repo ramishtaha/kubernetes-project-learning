@@ -1,8 +1,12 @@
-# Project 3: Database Integration 🗄️
+# 🗄️ Project 03: Database Integration
 
 **Difficulty**: 🟢 Beginner  
 **Time Estimate**: 90-120 minutes  
-**Prerequisites**: Projects 1-2 completed  
+**Prerequisites**: Projects 01-02 completed, basic SQL knowledge  
+
+## 📋 Overview
+
+Deploy a complete application stack with persistent data storage! This project introduces stateful applications, persistent storage, and database integration patterns in Kubernetes. You'll learn how to deploy databases, manage persistent data, and connect applications to stateful services.
 
 ## 🎯 Learning Objectives
 
@@ -13,15 +17,7 @@ By the end of this project, you will:
 - Understand storage classes and dynamic provisioning
 - Implement database initialization and migration strategies
 - Handle data backup and recovery scenarios
-
-## 📋 Project Overview
-
-You'll deploy a complete application stack with:
-- **PostgreSQL Database**: Stateful database with persistent storage
-- **Backend API**: Node.js application connecting to the database
-- **Frontend**: React application for data visualization
-- **Init Job**: Database schema initialization
-- **Backup Job**: Automated database backup strategy
+- Learn database security and access patterns
 
 ### What We'll Build
 - A full-stack todo application with persistent data

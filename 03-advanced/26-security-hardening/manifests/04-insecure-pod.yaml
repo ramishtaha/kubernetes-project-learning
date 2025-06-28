@@ -1,0 +1,121 @@
+# Insecure Pod Example - This pod should be DENIED by security policies
+# This demonstrates various security violations that should be caught
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: insecure-pod
+  namespace: secure-namespace
+  labels:
+    app: insecure-example
+    security-violation: "true"
+spec:
+  # Violation: No service account specified (uses default)
+  containers:
+  - name: privileged-container
+    image: nginx:latest  # Violation: Using 'latest' tag
+    # Violation: Running as privileged
+    securityContext:
+      privileged: true
+      runAsUser: 0  # Violation: Running as root
+      allowPrivilegeEscalation: true
+      readOnlyRootFilesystem: false
+      capabilities:
+        add:
+        - SYS_ADMIN  # Violation: Dangerous capability
+        - NET_ADMIN
+    # Violation: No resource limits defined
+    ports:
+    - containerPort: 80
+    env:
+    - name: SECRET_PASSWORD
+      value: "hardcoded-password"  # Violation: Hardcoded secret
+    volumeMounts:
+    - name: host-root
+      mountPath: /host-root
+      readOnly: false
+  # Violation: Mounting host filesystem
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /
+      type: Directory
+  # Violation: Using host network
+  hostNetwork: true
+  # Violation: Using host PID namespace
+  hostPID: true
+  # Violation: No security context at pod level
+  restartPolicy: Always
+
+---
+# Another insecure pod example - Focus on different violations
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-hog
+  namespace: secure-namespace
+  labels:
+    app: resource-violation
+spec:
+  containers:
+  - name: memory-hog
+    image: busybox
+    # Violation: No resource limits - could consume all node resources
+    command: ["sh", "-c", "while true; do echo 'consuming resources'; sleep 1; done"]
+    # Violation: Writable root filesystem
+    securityContext:
+      runAsUser: 0  # Violation: Running as root
+      readOnlyRootFilesystem: false
+  - name: cpu-hog
+    image: alpine
+    # Violation: No resource requests or limits
+    command: ["sh", "-c", "while true; do :; done"]  # CPU intensive loop
+    securityContext:
+      allowPrivilegeEscalation: true  # Violation: Allows privilege escalation
+
+---
+# Pod with network security violations
+apiVersion: v1
+kind: Pod
+metadata:
+  name: network-violator
+  namespace: secure-namespace
+  labels:
+    app: network-violation
+spec:
+  # Violation: Using host network bypasses NetworkPolicies
+  hostNetwork: true
+  containers:
+  - name: network-container
+    image: nicolaka/netshoot
+    # Violation: CAP_NET_RAW allows packet sniffing
+    securityContext:
+      capabilities:
+        add:
+        - NET_RAW
+        - NET_ADMIN
+    command: ["sleep", "3600"]
+
+---
+# Pod violating image security policies
+apiVersion: v1
+kind: Pod
+metadata:
+  name: image-violator
+  namespace: secure-namespace
+  labels:
+    app: image-violation
+spec:
+  containers:
+  - name: untrusted-image
+    # Violation: Using image from untrusted registry
+    image: docker.io/malicious/backdoor:latest
+    # Violation: No image digest verification
+    securityContext:
+      runAsNonRoot: false  # Violation: Explicitly allowing root
+    # Violation: No resource constraints
+  - name: unscanned-image
+    # Violation: Image not from approved registry
+    image: random-user/unknown-app:v1.0
+    securityContext:
+      readOnlyRootFilesystem: false

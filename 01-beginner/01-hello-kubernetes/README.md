@@ -1,8 +1,12 @@
-# Project 1: Hello Kubernetes 👋
+# 👋 Project 01: Hello Kubernetes
 
 **Difficulty**: 🟢 Beginner  
 **Time Estimate**: 30-45 minutes  
-**Prerequisites**: Basic Docker knowledge  
+**Prerequisites**: Basic Docker knowledge, kubectl installed  
+
+## 📋 Overview
+
+Deploy your first application to Kubernetes! This project introduces the fundamental building blocks of Kubernetes: Pods, Deployments, and Services. You'll deploy a simple "Hello World" web application and expose it to external traffic.
 
 ## 🎯 Learning Objectives
 
@@ -11,10 +15,7 @@ By the end of this project, you will:
 - Deploy your first application on Kubernetes
 - Learn to interact with your cluster using `kubectl`
 - Understand the relationship between containers, pods, and deployments
-
-## 📋 Project Overview
-
-You'll deploy a simple "Hello World" web application to Kubernetes and expose it to external traffic. This project introduces the fundamental building blocks of Kubernetes applications.
+- Expose applications to external traffic using Services
 
 ### What We'll Build
 - A simple web application running in a Pod

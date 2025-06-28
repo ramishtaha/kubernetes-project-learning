@@ -1,0 +1,401 @@
+# Image Security Policies
+# These policies enforce container image security best practices
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+  annotations:
+    policies.kyverno.io/title: Disallow Latest Tag
+    policies.kyverno.io/category: Image Security
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Container images should use specific tags instead of 'latest'
+      to ensure reproducible deployments and avoid unexpected updates.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-image-tag
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          - Deployment
+          - StatefulSet
+          - DaemonSet
+          - Job
+          - CronJob
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+          - kyverno
+    validate:
+      message: "Images must not use 'latest' tag"
+      pattern:
+        spec:
+          =(template):
+            =(spec):
+              =(initContainers):
+              - name: "*"
+                image: "!*:latest"
+              containers:
+              - name: "*"
+                image: "!*:latest"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-image-digest
+  annotations:
+    policies.kyverno.io/title: Require Image Digest
+    policies.kyverno.io/category: Image Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Container images should include SHA256 digests to ensure
+      image integrity and prevent tag mutation attacks.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-image-digest
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+        namespaces:
+        - secure-namespace
+    validate:
+      message: "Images must include SHA256 digest (@sha256:...)"
+      pattern:
+        spec:
+          =(initContainers):
+          - name: "*"
+            image: "*@sha256:*"
+          containers:
+          - name: "*"
+            image: "*@sha256:*"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: allowed-image-registries
+  annotations:
+    policies.kyverno.io/title: Allowed Image Registries
+    policies.kyverno.io/category: Image Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Container images must come from approved registries to ensure
+      supply chain security and image scanning compliance.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-registry
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          - Deployment
+          - StatefulSet
+          - DaemonSet
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+          - kyverno
+    validate:
+      message: "Images must come from approved registries"
+      anyPattern:
+      # Allow images from approved registries
+      - spec:
+          =(template):
+            =(spec):
+              =(initContainers):
+              - name: "*"
+                image: "gcr.io/*"
+              containers:
+              - name: "*"
+                image: "gcr.io/*"
+      - spec:
+          =(template):
+            =(spec):
+              =(initContainers):
+              - name: "*"
+                image: "registry.k8s.io/*"
+              containers:
+              - name: "*"
+                image: "registry.k8s.io/*"
+      - spec:
+          =(template):
+            =(spec):
+              =(initContainers):
+              - name: "*"
+                image: "quay.io/*"
+              containers:
+              - name: "*"
+                image: "quay.io/*"
+      - spec:
+          =(template):
+            =(spec):
+              =(initContainers):
+              - name: "*"
+                image: "your-registry.company.com/*"
+              containers:
+              - name: "*"
+                image: "your-registry.company.com/*"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: mutate-image-pull-policy
+  annotations:
+    policies.kyverno.io/title: Mutate Image Pull Policy
+    policies.kyverno.io/category: Image Security
+    policies.kyverno.io/severity: low
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Automatically set imagePullPolicy to Always for containers
+      to ensure the latest image is pulled from the registry.
+spec:
+  background: true
+  rules:
+  - name: set-image-pull-policy
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+          - Deployment
+          - StatefulSet
+          - DaemonSet
+    exclude:
+      any:
+      - resources:
+          namespaces:
+          - kube-system
+    mutate:
+      patchStrategicMerge:
+        spec:
+          =(template):
+            =(spec):
+              =(initContainers):
+              - (name): "*"
+                imagePullPolicy: Always
+              containers:
+              - (name): "*"
+                imagePullPolicy: Always
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: block-unsigned-images
+  annotations:
+    policies.kyverno.io/title: Block Unsigned Images
+    policies.kyverno.io/category: Image Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Container images must be signed to verify authenticity
+      and integrity. This policy checks for Cosign signatures.
+spec:
+  validationFailureAction: enforce
+  background: false
+  webhookTimeoutSeconds: 30
+  rules:
+  - name: check-image-signature
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+        namespaces:
+        - secure-namespace
+    verifyImages:
+    - imageReferences:
+      - "*"
+      attestors:
+      - entries:
+        - keys:
+            publicKeys: |-
+              -----BEGIN PUBLIC KEY-----
+              MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...
+              -----END PUBLIC KEY-----
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: image-vulnerability-scan
+  annotations:
+    policies.kyverno.io/title: Image Vulnerability Scan Required
+    policies.kyverno.io/category: Image Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/subject: Pod
+    policies.kyverno.io/description: >-
+      Container images must be scanned for vulnerabilities and
+      have a clean security report before deployment.
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+  - name: check-vulnerability-scan
+    match:
+      any:
+      - resources:
+          kinds:
+          - Pod
+        namespaces:
+        - secure-namespace
+    validate:
+      message: "Images must be vulnerability scanned and approved"
+      pattern:
+        metadata:
+          annotations:
+            # Require vulnerability scan annotations
+            security.scan/status: "passed"
+            security.scan/scanner: "?*"
+            security.scan/date: "?*"
+
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: generate-image-pull-secret
+  annotations:
+    policies.kyverno.io/title: Generate Image Pull Secret
+    policies.kyverno.io/category: Image Security
+    policies.kyverno.io/severity: low
+    policies.kyverno.io/subject: Namespace
+    policies.kyverno.io/description: >-
+      Automatically create imagePullSecrets for private registries
+      in new namespaces to enable secure image pulling.
+spec:
+  background: true
+  rules:
+  - name: generate-pull-secret
+    match:
+      any:
+      - resources:
+          kinds:
+          - Namespace
+          selector:
+            matchLabels:
+              security.hardening/enabled: "true"
+    exclude:
+      any:
+      - resources:
+          names:
+          - kube-system
+          - kube-public
+          - kyverno
+    generate:
+      kind: Secret
+      name: registry-credentials
+      namespace: "{{ request.object.metadata.name }}"
+      synchronize: true
+      data:
+        type: kubernetes.io/dockerconfigjson
+        data:
+          .dockerconfigjson: "eyJhdXRocyI6e319"  # Empty auth config
+
+---
+# ConfigMap with image security best practices
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: image-security-guidelines
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: documentation
+    app.kubernetes.io/part-of: security-hardening
+data:
+  image-naming.md: |
+    # Image Naming Best Practices
+    
+    ## Registry Structure
+    ```
+    registry.company.com/
+    ├── production/
+    │   ├── web-frontend:v1.2.3@sha256:abc123...
+    │   └── api-backend:v2.1.0@sha256:def456...
+    ├── staging/
+    │   └── web-frontend:v1.2.4-rc1@sha256:ghi789...
+    └── security/
+        └── scanner:v3.0.0@sha256:jkl012...
+    ```
+    
+    ## Tagging Strategy
+    - Use semantic versioning (v1.2.3)
+    - Include SHA256 digests
+    - Avoid 'latest' in production
+    - Use environment-specific tags
+    
+  vulnerability-scanning.md: |
+    # Container Image Vulnerability Scanning
+    
+    ## Scanning Tools
+    - Trivy
+    - Grype
+    - Clair
+    - Snyk
+    - Aqua Security
+    
+    ## Scan Process
+    1. Build image
+    2. Run vulnerability scan
+    3. Check for critical/high vulnerabilities
+    4. Add scan metadata to image
+    5. Push to registry if clean
+    
+    ## Scan Annotations
+    ```yaml
+    metadata:
+      annotations:
+        security.scan/status: "passed"
+        security.scan/scanner: "trivy"
+        security.scan/date: "2024-01-15T10:30:00Z"
+        security.scan/critical: "0"
+        security.scan/high: "0"
+        security.scan/medium: "2"
+    ```
+    
+  supply-chain-security.md: |
+    # Container Supply Chain Security
+    
+    ## Image Signing with Cosign
+    ```bash
+    # Sign image
+    cosign sign --key cosign.key registry.com/app:v1.0.0
+    
+    # Verify signature
+    cosign verify --key cosign.pub registry.com/app:v1.0.0
+    ```
+    
+    ## SBOM (Software Bill of Materials)
+    ```bash
+    # Generate SBOM
+    syft registry.com/app:v1.0.0 -o spdx-json > sbom.json
+    
+    # Attach SBOM to image
+    cosign attach sbom --sbom sbom.json registry.com/app:v1.0.0
+    ```
+    
+    ## SLSA Provenance
+    - Build provenance attestation
+    - Builder identity verification
+    - Build parameter integrity
+    - Material consistency

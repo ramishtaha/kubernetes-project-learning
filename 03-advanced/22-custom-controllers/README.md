@@ -1,17 +1,23 @@
-# Project 12: Custom Controllers and Operators
+# ⚙️ Project 22: Custom Controllers and Operators
 
-## Learning Objectives
-- Build custom Kubernetes controllers
-- Create Custom Resource Definitions (CRDs)
-- Implement the controller pattern
-- Develop Kubernetes operators
-- Understand the operator lifecycle management
+**Difficulty**: 🔴 Advanced  
+**Time Estimate**: 6-8 hours  
+**Prerequisites**: Projects 01-21 completed, Go programming basics  
 
-## Prerequisites
-- Completed Projects 1-11
-- Go programming language basics
-- Understanding of Kubernetes API concepts
-- Knowledge of controller patterns
+## 📋 Overview
+
+Build custom Kubernetes controllers and operators from scratch! This project demonstrates how to extend Kubernetes functionality by creating Custom Resource Definitions (CRDs) and implementing the controller pattern. You'll learn to build operators that manage complex application lifecycles automatically.
+
+## 🎯 Learning Objectives
+
+By the end of this project, you will:
+- Build custom Kubernetes controllers and operators
+- Create and manage Custom Resource Definitions (CRDs)
+- Implement the controller reconciliation pattern
+- Develop operators for application lifecycle management
+- Understand operator SDK and development frameworks
+- Learn custom admission webhooks and validation
+- Understand operator lifecycle management (OLM)
 
 ## Architecture Overview
 ```

@@ -1,8 +1,12 @@
-# Project 2: Multi-Container Application 🐳
+# 🐳 Project 02: Multi-Container Application
 
 **Difficulty**: 🟢 Beginner  
 **Time Estimate**: 60-90 minutes  
-**Prerequisites**: Project 1 completed  
+**Prerequisites**: Project 01 completed, basic understanding of containers  
+
+## 📋 Overview
+
+Deploy a full-stack web application with multiple containers working together! This project demonstrates how to run multiple containers in a single Pod, share data between containers, and manage configuration using ConfigMaps and Secrets.
 
 ## 🎯 Learning Objectives
 
@@ -12,14 +16,7 @@ By the end of this project, you will:
 - Implement Secrets for sensitive data
 - Work with Volumes for data sharing between containers
 - Understand sidecar pattern and init containers
-
-## 📋 Project Overview
-
-You'll deploy a full-stack web application consisting of:
-- **Frontend**: React application serving the UI
-- **Backend**: Node.js API server
-- **Sidecar**: Nginx proxy for request routing
-- **Init Container**: Database schema initialization
+- Learn inter-container communication within a Pod
 
 ### What We'll Build
 - A multi-tier web application with frontend and backend

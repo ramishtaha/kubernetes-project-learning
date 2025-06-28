@@ -1,0 +1,88 @@
+# Pod Disruption Budget for Web Frontend
+# Ensures high availability during voluntary disruptions (node drains, updates, etc.)
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-frontend-pdb
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  minAvailable: 2  # Minimum number of pods that must remain available
+  selector:
+    matchLabels:
+      app: web-frontend
+      tier: frontend
+
+---
+# Pod Disruption Budget for API Backend
+# Using percentage to maintain availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: api-backend-pdb
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  maxUnavailable: 25%  # Maximum 25% of pods can be unavailable
+  selector:
+    matchLabels:
+      app: api-backend
+      tier: backend
+
+---
+# Pod Disruption Budget for Database
+# Critical component - only allow one pod to be unavailable
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: database-pdb
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: database
+      tier: database
+
+---
+# Pod Disruption Budget for Cache Layer
+# Redis/Memcached - allow some disruption but maintain service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cache-pdb
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  minAvailable: 1  # At least one cache instance must be available
+  selector:
+    matchLabels:
+      app: cache
+      tier: cache
+
+---
+# Pod Disruption Budget for Monitoring Components
+# Ensure observability during updates
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: monitoring-pdb
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: security-hardening
+spec:
+  maxUnavailable: 50%  # Allow more disruption for non-critical monitoring
+  selector:
+    matchLabels:
+      component: monitoring

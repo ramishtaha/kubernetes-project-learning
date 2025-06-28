@@ -1,0 +1,184 @@
+# Pod Security Standards Configuration
+# This file demonstrates how to configure Pod Security Standards at namespace level
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pss-baseline-example
+  labels:
+    # Enforce baseline policy
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest
+    
+    # Audit against restricted policy (reports violations)
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    
+    # Warn against restricted policy (shows warnings)
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+  annotations:
+    description: "Namespace with baseline enforcement and restricted auditing"
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pss-restricted-example
+  labels:
+    # Enforce restricted policy (most secure)
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    
+    # Audit and warn also on restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+  annotations:
+    description: "Namespace with full restricted policy enforcement"
+
+---
+# AdmissionConfiguration for cluster-wide Pod Security Standards
+# This would be applied at the cluster level in the API server configuration
+apiVersion: apiserver.config.k8s.io/v1
+kind: AdmissionConfiguration
+plugins:
+- name: PodSecurity
+  configuration:
+    apiVersion: pod-security.admission.config.k8s.io/v1beta1
+    kind: PodSecurityConfiguration
+    defaults:
+      enforce: "baseline"         # Default enforcement level
+      enforce-version: "latest"   # Use latest policy version
+      audit: "restricted"         # Audit against restricted
+      audit-version: "latest"
+      warn: "restricted"          # Warn against restricted
+      warn-version: "latest"
+    exemptions:
+      # Exempt system namespaces
+      usernames: []
+      runtimeClasses: []
+      namespaces: ["kube-system", "kube-public", "kube-node-lease"]
+
+---
+# Example ValidatingAdmissionWebhook for custom Pod Security validation
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionWebhook
+metadata:
+  name: pod-security-custom-validator
+webhooks:
+- name: pod-security.custom.io
+  clientConfig:
+    service:
+      name: pod-security-webhook
+      namespace: security-system
+      path: "/validate-pod-security"
+  rules:
+  - operations: ["CREATE", "UPDATE"]
+    apiGroups: [""]
+    apiVersions: ["v1"]
+    resources: ["pods"]
+  admissionReviewVersions: ["v1", "v1beta1"]
+  sideEffects: None
+  failurePolicy: Fail
+
+---
+# ConfigMap with Pod Security Standards documentation
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pod-security-standards-guide
+  namespace: secure-namespace
+  labels:
+    app.kubernetes.io/component: documentation
+    app.kubernetes.io/part-of: security-hardening
+data:
+  privileged-policy.md: |
+    # Privileged Policy
+    
+    The most permissive policy with no restrictions.
+    
+    **Use Cases:**
+    - System components
+    - Privileged daemonsets
+    - Legacy applications (temporary)
+    
+    **Security Implications:**
+    - Full host access
+    - Kernel capabilities
+    - Host network/filesystem access
+    
+  baseline-policy.md: |
+    # Baseline Policy
+    
+    Prevents known privilege escalations while maintaining compatibility.
+    
+    **Restrictions:**
+    - No privileged containers
+    - No host namespaces (network, PID, IPC)
+    - No hostPath volumes (except allowed types)
+    - No privileged escalation
+    - Limited capabilities
+    
+    **Allowed:**
+    - Non-root users (but not enforced)
+    - Standard volumes
+    - Standard networking
+    
+  restricted-policy.md: |
+    # Restricted Policy
+    
+    Heavily restricted policy following current hardening best practices.
+    
+    **Requirements:**
+    - Run as non-root user
+    - Drop ALL capabilities
+    - Read-only root filesystem
+    - No privilege escalation
+    - Seccomp profile (runtime/default or localhost)
+    - SELinux/AppArmor (if available)
+    
+    **Volume Types:**
+    - configMap, downwardAPI, emptyDir, projected, secret
+    - persistentVolumeClaim, csi (with restrictions)
+    
+  migration-strategy.md: |
+    # Migration Strategy
+    
+    ## Phase 1: Assessment
+    1. Audit existing workloads
+    2. Identify violations
+    3. Plan remediation
+    
+    ## Phase 2: Implementation
+    1. Start with 'warn' mode
+    2. Fix violations
+    3. Enable 'audit' mode
+    4. Enable 'enforce' mode
+    
+    ## Phase 3: Monitoring
+    1. Monitor policy violations
+    2. Regular security reviews
+    3. Update policies as needed
+    
+  troubleshooting.md: |
+    # Troubleshooting Pod Security Standards
+    
+    ## Common Issues
+    
+    ### Pod rejected due to runAsNonRoot
+    **Problem:** Pod runs as root user
+    **Solution:** Set runAsNonRoot: true and runAsUser: <non-zero>
+    
+    ### Privileged container blocked
+    **Problem:** Container needs host access
+    **Solution:** Use specific capabilities instead of privileged: true
+    
+    ### Volume mount blocked
+    **Problem:** Using hostPath volumes
+    **Solution:** Use configMap, secret, or PVC instead
+    
+    ### SecurityContext conflicts
+    **Problem:** Pod and container security contexts conflict
+    **Solution:** Ensure consistency between pod and container settings

@@ -66,10 +66,11 @@ check_project "$BASE_DIR/03-advanced/22-custom-controllers" "Project 22: Custom 
 check_project "$BASE_DIR/03-advanced/23-ml-pipeline" "Project 23: ML Pipeline"
 check_project "$BASE_DIR/03-advanced/24-edge-computing" "Project 24: Edge Computing"
 check_project "$BASE_DIR/03-advanced/25-enterprise-platform" "Project 25: Enterprise Platform"
+check_project "$BASE_DIR/03-advanced/26-security-hardening" "Project 26: Security Hardening"
 
 echo "🎯 SUMMARY:"
 echo "==========="
-echo "All 15 projects now have comprehensive content including:"
+echo "All 16 projects now have comprehensive content including:"
 echo "✅ Detailed README.md files with learning objectives"
 echo "✅ Complete Kubernetes manifests for deployment"
 echo "✅ Deployment and cleanup scripts"

@@ -1,8 +1,12 @@
-# Project 7: CI/CD Pipeline with GitOps 🔄
+# 🔄 Project 12: CI/CD Pipeline with GitOps
 
 **Difficulty**: 🟡 Intermediate  
 **Time Estimate**: 4-5 hours  
-**Prerequisites**: Projects 1-6 completed  
+**Prerequisites**: Projects 01-11 completed, Git workflows, basic CI/CD concepts  
+
+## 📋 Overview
+
+Build a complete CI/CD pipeline with GitOps workflows! This project demonstrates how to implement automated testing, building, and deployment using GitHub Actions and ArgoCD. You'll learn modern deployment strategies and pipeline security practices for production-ready applications.
 
 ## 🎯 Learning Objectives
 
@@ -13,6 +17,7 @@ By the end of this project, you will:
 - Implement blue-green and canary deployment strategies
 - Set up pipeline security and compliance
 - Monitor deployment health and rollback capabilities
+- Learn multi-environment promotion workflows
 
 ## 📋 Project Overview
 

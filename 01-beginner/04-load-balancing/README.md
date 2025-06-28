@@ -1,8 +1,12 @@
-# Project 4: Load Balancing and Scaling 📊
+# 📊 Project 04: Load Balancing and Scaling
 
 **Difficulty**: 🟢 Beginner  
 **Time Estimate**: 90-120 minutes  
-**Prerequisites**: Projects 1-3 completed  
+**Prerequisites**: Projects 01-03 completed, basic networking concepts  
+
+## 📋 Overview
+
+Build a scalable web application with automatic load balancing and scaling! This project introduces Ingress controllers, Horizontal Pod Autoscaling, and advanced service patterns. You'll learn how to handle traffic distribution and automatically scale applications based on demand.
 
 ## 🎯 Learning Objectives
 
@@ -13,16 +17,7 @@ By the end of this project, you will:
 - Understand different service types and their use cases
 - Implement health checks and readiness probes
 - Monitor application performance under load
-
-## 📋 Project Overview
-
-You'll deploy a scalable web application with:
-- **Ingress Controller**: NGINX Ingress for external access
-- **Load Balancer**: Multiple pods behind a service
-- **Auto Scaling**: HPA based on CPU and memory metrics
-- **Health Checks**: Liveness and readiness probes
-- **Load Testing**: Simulate traffic to trigger scaling
-- **Metrics Server**: For resource monitoring
+- Learn traffic routing and SSL termination
 
 ### What We'll Build
 - A scalable web application with multiple replicas

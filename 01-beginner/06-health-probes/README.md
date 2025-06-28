@@ -1,13 +1,23 @@
-# Project 6: Managing Application Health 🏥
+# 🏥 Project 06: Managing Application Health
 
-## 📚 Learning Objectives
+**Difficulty**: 🟢 Beginner  
+**Time Estimate**: 60-90 minutes  
+**Prerequisites**: Projects 01-05 completed, basic application debugging knowledge  
 
-By the end of this project, you will understand:
-- The importance of health checks in Kubernetes applications
-- The difference between liveness, readiness, and startup probes
-- How to implement different probe mechanisms (HTTP, TCP, exec)
-- Best practices for configuring health check parameters
-- How to troubleshoot common health probe issues
+## � Overview
+
+Implement comprehensive health monitoring for your Kubernetes applications! This project demonstrates how to use liveness, readiness, and startup probes to ensure your applications are running correctly and can handle traffic appropriately. Learn essential patterns for application reliability and observability.
+
+## 🎯 Learning Objectives
+
+By the end of this project, you will:
+- Understand the importance of health checks in Kubernetes applications
+- Implement liveness, readiness, and startup probes
+- Use different probe mechanisms (HTTP, TCP, exec)
+- Configure appropriate probe parameters and timing
+- Troubleshoot common health probe issues
+- Learn best practices for application health monitoring
+- Understand probe behavior during deployments and failures
 
 ## 🎯 Project Overview
 

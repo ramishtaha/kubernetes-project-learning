@@ -1,8 +1,12 @@
-# Project 6: Microservices Architecture 🏗️
+# 🏗️ Project 11: Microservices Architecture
 
 **Difficulty**: 🟡 Intermediate  
 **Time Estimate**: 3-4 hours  
-**Prerequisites**: Projects 1-5 completed  
+**Prerequisites**: Projects 01-06 completed, distributed systems concepts  
+
+## 📋 Overview
+
+Build a complete e-commerce microservices application! This project demonstrates how to design, deploy, and manage a distributed system using microservices patterns. You'll implement service-to-service communication, API gateways, and distributed tracing for a production-ready architecture.
 
 ## 🎯 Learning Objectives
 
@@ -13,6 +17,7 @@ By the end of this project, you will:
 - Implement distributed tracing and observability
 - Handle service discovery and load balancing
 - Understand the challenges and benefits of microservices
+- Learn inter-service security and authentication
 
 ## 📋 Project Overview
 

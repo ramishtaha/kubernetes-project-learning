@@ -1,8 +1,12 @@
-# Project 5: Configuration Management 🔧
+# 🔧 Project 05: Configuration Management
 
 **Difficulty**: 🟢 Beginner  
 **Time Estimate**: 120-150 minutes  
-**Prerequisites**: Projects 1-4 completed  
+**Prerequisites**: Projects 01-04 completed, Git basics  
+
+## 📋 Overview
+
+Master configuration management across multiple environments! This project introduces Helm for package management, Kustomize for environment-specific configurations, and GitOps workflows. You'll learn how to deploy the same application across different environments with environment-specific settings.
 
 ## 🎯 Learning Objectives
 
@@ -13,16 +17,7 @@ By the end of this project, you will:
 - Manage configuration across multiple environments (dev/staging/prod)
 - Implement GitOps workflows for configuration management
 - Understand configuration best practices and security
-
-## 📋 Project Overview
-
-You'll deploy the same application across multiple environments with:
-- **Helm Charts**: Parameterized application templates
-- **Kustomize**: Environment-specific overlays
-- **Namespaces**: Environment isolation
-- **ConfigMaps and Secrets**: Environment-specific configurations
-- **GitOps**: Configuration stored in Git repositories
-- **Multi-Environment Pipeline**: Automated deployment across environments
+- Learn environment isolation and promotion strategies
 
 ### What We'll Build
 - A multi-tier application deployed across dev, staging, and production

@@ -1,0 +1,295 @@
+# Secure Pod Example - This pod follows security best practices
+# This demonstrates proper security configuration that should pass all policies
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-web-frontend
+  namespace: secure-namespace
+  labels:
+    app: web-frontend
+    tier: frontend
+    version: v1.2.3
+    environment: production
+    security.hardening/compliant: "true"
+  annotations:
+    security.hardening/scan-date: "2024-01-15"
+    security.hardening/approved-by: "security-team"
+spec:
+  serviceAccountName: secure-workload-sa
+  automountServiceAccountToken: false
+  securityContext:
+    # Pod-level security context
+    runAsNonRoot: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: web-app
+    # Using specific version with digest for image integrity
+    image: nginx:1.24.0-alpine@sha256:2d194184b067db3598771b4cf326cfe6ad5051937ba2cc83222d94d4d54e4a90
+    securityContext:
+      # Container-level security context
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 1001
+      runAsGroup: 1001
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL  # Drop all capabilities
+        add: []  # Don't add any back
+      seccompProfile:
+        type: RuntimeDefault
+    # Resource limits and requests for QoS
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    ports:
+    - containerPort: 8080
+      name: http
+      protocol: TCP
+    # Health checks for reliability
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 8080
+        scheme: HTTP
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8080
+        scheme: HTTP
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 3
+    # Environment variables from secrets/configmaps
+    env:
+    - name: APP_ENV
+      value: "production"
+    - name: LOG_LEVEL
+      value: "info"
+    envFrom:
+    - configMapRef:
+        name: app-config
+    - secretRef:
+        name: app-secret
+    # Volume mounts with read-only where possible
+    volumeMounts:
+    - name: tmp-volume
+      mountPath: /tmp
+    - name: var-cache
+      mountPath: /var/cache/nginx
+    - name: var-run
+      mountPath: /var/run
+    - name: config-volume
+      mountPath: /etc/nginx/conf.d
+      readOnly: true
+  volumes:
+  # Temporary volumes for writable directories
+  - name: tmp-volume
+    emptyDir:
+      sizeLimit: 100Mi
+  - name: var-cache
+    emptyDir:
+      sizeLimit: 100Mi
+  - name: var-run
+    emptyDir:
+      sizeLimit: 10Mi
+  - name: config-volume
+    configMap:
+      name: nginx-config
+      defaultMode: 0444  # Read-only
+  # Pod-level configurations
+  restartPolicy: Always
+  terminationGracePeriodSeconds: 30
+  dnsPolicy: ClusterFirst
+
+---
+# Secure API Backend Pod
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-api-backend
+  namespace: secure-namespace
+  labels:
+    app: api-backend
+    tier: backend
+    version: v2.1.0
+    environment: production
+    security.hardening/compliant: "true"
+spec:
+  serviceAccountName: secure-workload-sa
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1002
+    runAsGroup: 1002
+    fsGroup: 1002
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: api-server
+    # Using specific version from trusted registry
+    image: node:18.19.0-alpine@sha256:2f46fd49c767554c089a5eb219115148340932d4af634dc79bd1d7757be6641f
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 1002
+      runAsGroup: 1002
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    ports:
+    - containerPort: 3000
+      name: api
+      protocol: TCP
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 3000
+      initialDelaySeconds: 45
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 3000
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    env:
+    - name: NODE_ENV
+      value: "production"
+    - name: PORT
+      value: "3000"
+    volumeMounts:
+    - name: tmp-volume
+      mountPath: /tmp
+    - name: app-cache
+      mountPath: /app/cache
+  volumes:
+  - name: tmp-volume
+    emptyDir:
+      sizeLimit: 50Mi
+  - name: app-cache
+    emptyDir:
+      sizeLimit: 200Mi
+  terminationGracePeriodSeconds: 60
+
+---
+# Secure Database Pod  
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secure-database
+  namespace: secure-namespace
+  labels:
+    app: database
+    tier: database
+    version: v13.8
+    environment: production
+    security.hardening/compliant: "true"
+spec:
+  serviceAccountName: secure-workload-sa
+  automountServiceAccountToken: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 999  # postgres user
+    runAsGroup: 999
+    fsGroup: 999
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: postgres
+    image: postgres:15.5-alpine@sha256:2a3e4c86d44dbd92f57a0e8f6e4acdcc2d6b1dc22fbab7cb5e4b0a3eae4c6c32
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      runAsUser: 999
+      runAsGroup: 999
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+    ports:
+    - containerPort: 5432
+      name: postgres
+      protocol: TCP
+    livenessProbe:
+      exec:
+        command:
+        - pg_isready
+        - -U
+        - postgres
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readinessProbe:
+      exec:
+        command:
+        - pg_isready
+        - -U
+        - postgres
+      initialDelaySeconds: 5
+      periodSeconds: 5
+    env:
+    - name: POSTGRES_DB
+      value: "appdb"
+    - name: POSTGRES_USER
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: username
+    - name: POSTGRES_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password
+    - name: PGDATA
+      value: /var/lib/postgresql/data/pgdata
+    volumeMounts:
+    - name: postgres-data
+      mountPath: /var/lib/postgresql/data
+    - name: tmp-volume
+      mountPath: /tmp
+    - name: var-run
+      mountPath: /var/run/postgresql
+  volumes:
+  - name: postgres-data
+    emptyDir:
+      sizeLimit: 10Gi
+  - name: tmp-volume
+    emptyDir:
+      sizeLimit: 100Mi
+  - name: var-run
+    emptyDir:
+      sizeLimit: 10Mi
+  terminationGracePeriodSeconds: 120
