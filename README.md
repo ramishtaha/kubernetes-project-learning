@@ -1,7 +1,7 @@
 # Kubernetes Project-Based Learning 🚀
 
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.28+-blue.svg)](https://kubernetes.io/)
-[![Projects](https://img.shields.io/badge/Projects-15-green.svg)](#project-structure)
+[![Projects](https://img.shields.io/badge/Projects-16-green.svg)](#project-structure)
 [![Difficulty](https://img.shields.io/badge/Difficulty-Beginner%20to%20Advanced-orange.svg)](#learning-path-overview)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Contributions](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -17,7 +17,7 @@ A comprehensive collection of hands-on Kubernetes projects designed to take you 
 
 ## 📚 Learning Path Overview
 
-This repository contains **15 progressively challenging projects** that will teach you Kubernetes concepts through hands-on experience. Each project builds upon previous knowledge while introducing new concepts and best practices.
+This repository contains **16 progressively challenging projects** that will teach you Kubernetes concepts through hands-on experience. Each project builds upon previous knowledge while introducing new concepts and best practices.
 
 ### 🎯 What You'll Learn
 
@@ -31,7 +31,9 @@ This repository contains **15 progressively challenging projects** that will tea
 
 ## 🗂️ Project Structure
 
-### 🟢 **Beginner Level (Projects 1-5)**
+> **Note**: This repository uses a [section-based numbering system](./docs/PROJECT_NUMBERING.md) that allows for easy expansion without renumbering existing projects.
+
+### 🟢 **Beginner Level (Projects 01-06)**
 Perfect for those new to Kubernetes or containerization.
 
 | Project | Description | Key Concepts |
@@ -41,28 +43,29 @@ Perfect for those new to Kubernetes or containerization.
 | [03-Database-Integration](./01-beginner/03-database-integration/) | Persistent data storage | PersistentVolumes, StatefulSets |
 | [04-Load-Balancing](./01-beginner/04-load-balancing/) | Traffic distribution and scaling | Ingress, HPA, Load Balancers |
 | [05-Configuration-Management](./01-beginner/05-configuration-management/) | Environment-specific deployments | Helm, Kustomize, Namespaces |
+| [06-Health-Probes](./01-beginner/06-health-probes/) | Application health monitoring | Liveness, Readiness, Startup Probes |
 
-### 🟡 **Intermediate Level (Projects 6-10)**
+### 🟡 **Intermediate Level (Projects 11-15)**
 For developers comfortable with basic Kubernetes concepts.
 
 | Project | Description | Key Concepts |
 |---------|-------------|--------------|
-| [06-Microservices-Architecture](./02-intermediate/06-microservices-architecture/) | Deploy microservices ecosystem | Service Mesh, API Gateway |
-| [07-CI-CD-Pipeline](./02-intermediate/07-cicd-pipeline/) | Automated deployment pipeline | GitOps, ArgoCD, Jenkins |
-| [08-Monitoring-Logging](./02-intermediate/08-monitoring-logging/) | Comprehensive monitoring setup | Prometheus, Grafana, ELK Stack |
-| [09-Security-RBAC](./02-intermediate/09-security-rbac/) | Implement security best practices | RBAC, Network Policies, PSP |
-| [10-Disaster-Recovery](./02-intermediate/10-disaster-recovery/) | Backup and recovery strategies | Velero, Cluster Backup |
+| [11-Microservices-Architecture](./02-intermediate/11-microservices-architecture/) | Deploy microservices ecosystem | Service Mesh, API Gateway |
+| [12-CI-CD-Pipeline](./02-intermediate/12-cicd-pipeline/) | Automated deployment pipeline | GitOps, ArgoCD, Jenkins |
+| [13-Monitoring-Logging](./02-intermediate/13-monitoring-logging/) | Comprehensive monitoring setup | Prometheus, Grafana, ELK Stack |
+| [14-Security-RBAC](./02-intermediate/14-security-rbac/) | Implement security best practices | RBAC, Network Policies, PSP |
+| [15-Disaster-Recovery](./02-intermediate/15-disaster-recovery/) | Backup and recovery strategies | Velero, Cluster Backup |
 
-### 🔴 **Advanced Level (Projects 11-15)**
+### 🔴 **Advanced Level (Projects 21-25)**
 Enterprise-grade scenarios and complex architectures.
 
 | Project | Description | Key Concepts |
 |---------|-------------|--------------|
-| [11-Multi-Cluster-Management](./03-advanced/11-multi-cluster-management/) | Manage multiple Kubernetes clusters | Cluster API, Multi-cluster Service Mesh |
-| [12-Custom-Controllers](./03-advanced/12-custom-controllers/) | Build custom Kubernetes operators | CRDs, Controllers, Operators |
-| [13-ML-Pipeline](./03-advanced/13-ml-pipeline/) | Machine learning workflow on K8s | Kubeflow, Model Serving, GPU Scheduling |
-| [14-Edge-Computing](./03-advanced/14-edge-computing/) | Edge and IoT deployments | K3s, Edge Computing Patterns |
-| [15-Enterprise-Platform](./03-advanced/15-enterprise-platform/) | Complete enterprise platform | Multi-tenancy, Cost Management, Governance |
+| [21-Multi-Cluster-Management](./03-advanced/21-multi-cluster-management/) | Manage multiple Kubernetes clusters | Cluster API, Multi-cluster Service Mesh |
+| [22-Custom-Controllers](./03-advanced/22-custom-controllers/) | Build custom Kubernetes operators | CRDs, Controllers, Operators |
+| [23-ML-Pipeline](./03-advanced/23-ml-pipeline/) | Machine learning workflow on K8s | Kubeflow, Model Serving, GPU Scheduling |
+| [24-Edge-Computing](./03-advanced/24-edge-computing/) | Edge and IoT deployments | K3s, Edge Computing Patterns |
+| [25-Enterprise-Platform](./03-advanced/25-enterprise-platform/) | Complete enterprise platform | Multi-tenancy, Cost Management, Governance |
 
 ## 🛠️ Prerequisites
 

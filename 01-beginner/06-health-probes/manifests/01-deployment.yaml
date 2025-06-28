@@ -1,0 +1,159 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-demo
+  namespace: health-demo
+  labels:
+    app: health-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: health-demo
+  template:
+    metadata:
+      labels:
+        app: health-demo
+    spec:
+      initContainers:
+      - name: setup-health-files
+        image: busybox:1.35
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Initializing health check system..."
+          sleep 10  # Simulate initialization time
+          touch /shared/app-initialized
+          touch /shared/healthy
+          echo "Health check system ready"
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 3000
+          allowPrivilegeEscalation: false
+      
+      containers:
+      - name: health-demo
+        image: nginx:1.21-alpine
+        ports:
+        - containerPort: 80
+          name: http
+        
+        # Startup Probe - Uses exec command to check if app has fully initialized
+        # This probe runs first and must succeed before other probes start
+        startupProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "test -f /shared/app-initialized && test -f /shared/healthy"
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30  # Allow 2.5 minutes for startup (30 * 5s)
+          successThreshold: 1
+        
+        # Liveness Probe - Uses HTTP GET to check if app is alive and functioning
+        # If this fails, Kubernetes will restart the container
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+            httpHeaders:
+            - name: X-Health-Check
+              value: liveness
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3   # Allow 3 consecutive failures before restart
+          successThreshold: 1
+        
+        # Readiness Probe - Uses TCP socket to check if app is ready for traffic
+        # If this fails, the pod is removed from service endpoints
+        readinessProbe:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3   # Allow 3 consecutive failures before marking unready
+          successThreshold: 1
+        
+        # Resource limits and requests
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        
+        # Volume mounts
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+        - name: html-content
+          mountPath: /usr/share/nginx/html
+        
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+      
+      # Health monitor sidecar container
+      - name: health-monitor
+        image: busybox:1.35
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Starting health monitor..."
+          while true; do
+            if [ -f /shared/healthy ]; then
+              echo "$(date): Application is healthy"
+            else
+              echo "$(date): Application is unhealthy"
+            fi
+            sleep 30
+          done
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        resources:
+          requests:
+            memory: "16Mi"
+            cpu: "50m"
+          limits:
+            memory: "32Mi"
+            cpu: "100m"
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 3000
+          allowPrivilegeEscalation: false
+      
+      # Volumes
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: html-content
+        configMap:
+          name: html-content
+      
+      # Security context for the pod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101  # nginx user
+        runAsGroup: 101
+        fsGroup: 101

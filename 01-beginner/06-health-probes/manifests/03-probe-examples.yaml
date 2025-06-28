@@ -1,0 +1,116 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: probe-test-examples
+  namespace: health-demo
+  labels:
+    app: probe-examples
+spec:
+  containers:
+  - name: http-probe-example
+    image: nginx:1.21-alpine
+    ports:
+    - containerPort: 80
+    
+    # Example of HTTP GET probe
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 80
+        httpHeaders:
+        - name: Custom-Header
+          value: probe-test
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    
+    volumeMounts:
+    - name: nginx-config
+      mountPath: /etc/nginx/conf.d/default.conf
+      subPath: default.conf
+    
+  - name: tcp-probe-example
+    image: busybox:1.35
+    command:
+    - /bin/sh
+    - -c
+    - |
+      # Start a simple TCP server on port 8080
+      while true; do
+        echo "TCP server ready" | nc -l -p 8080
+        sleep 1
+      done
+    
+    # Example of TCP socket probe
+    livenessProbe:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 15
+      periodSeconds: 20
+    
+    readinessProbe:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  
+  - name: exec-probe-example
+    image: busybox:1.35
+    command:
+    - /bin/sh
+    - -c
+    - |
+      # Create health file after startup
+      sleep 20
+      touch /tmp/healthy
+      
+      # Keep container running
+      while true; do
+        if [ -f /tmp/healthy ]; then
+          echo "$(date): Application healthy"
+        else
+          echo "$(date): Application unhealthy"
+        fi
+        sleep 30
+      done
+    
+    # Example of exec command probe
+    startupProbe:
+      exec:
+        command:
+        - test
+        - -f
+        - /tmp/healthy
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      failureThreshold: 10
+    
+    livenessProbe:
+      exec:
+        command:
+        - /bin/sh
+        - -c
+        - "test -f /tmp/healthy && echo 'healthy'"
+      initialDelaySeconds: 30
+      periodSeconds: 30
+    
+    readinessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 25
+      periodSeconds: 15
+      
+  volumes:
+  - name: nginx-config
+    configMap:
+      name: nginx-config
+  
+  restartPolicy: Always

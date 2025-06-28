@@ -55,21 +55,22 @@ Test-ProjectStructure "$BASE_DIR\01-beginner\02-multi-container-app" "Project 2:
 Test-ProjectStructure "$BASE_DIR\01-beginner\03-database-integration" "Project 3: Database Integration"
 Test-ProjectStructure "$BASE_DIR\01-beginner\04-load-balancing" "Project 4: Load Balancing"
 Test-ProjectStructure "$BASE_DIR\01-beginner\05-configuration-management" "Project 5: Configuration Management"
+Test-ProjectStructure "$BASE_DIR\01-beginner\06-health-probes" "Project 6: Health Probes"
 
 Write-Host "INTERMEDIATE PROJECTS:" -ForegroundColor Yellow
 Write-Host "-------------------------" -ForegroundColor Yellow
-Test-ProjectStructure "$BASE_DIR\02-intermediate\06-microservices-architecture" "Project 6: Microservices Architecture"
-Test-ProjectStructure "$BASE_DIR\02-intermediate\07-cicd-pipeline" "Project 7: CI/CD Pipeline"
-Test-ProjectStructure "$BASE_DIR\02-intermediate\08-monitoring-logging" "Project 8: Monitoring & Logging"
-Test-ProjectStructure "$BASE_DIR\02-intermediate\09-security-rbac" "Project 9: Security & RBAC"
-Test-ProjectStructure "$BASE_DIR\02-intermediate\10-disaster-recovery" "Project 10: Disaster Recovery"
+Test-ProjectStructure "$BASE_DIR\02-intermediate\11-microservices-architecture" "Project 11: Microservices Architecture"
+Test-ProjectStructure "$BASE_DIR\02-intermediate\12-cicd-pipeline" "Project 12: CI/CD Pipeline"
+Test-ProjectStructure "$BASE_DIR\02-intermediate\13-monitoring-logging" "Project 13: Monitoring & Logging"
+Test-ProjectStructure "$BASE_DIR\02-intermediate\14-security-rbac" "Project 14: Security & RBAC"
+Test-ProjectStructure "$BASE_DIR\02-intermediate\15-disaster-recovery" "Project 15: Disaster Recovery"
 
 Write-Host "ADVANCED PROJECTS:" -ForegroundColor Yellow
 Write-Host "--------------------" -ForegroundColor Yellow
-Test-ProjectStructure "$BASE_DIR\03-advanced\11-multi-cluster-management" "Project 11: Multi-cluster Management"
-Test-ProjectStructure "$BASE_DIR\03-advanced\12-custom-controllers" "Project 12: Custom Controllers"
-Test-ProjectStructure "$BASE_DIR\03-advanced\13-ml-pipeline" "Project 13: ML Pipeline"
-Test-ProjectStructure "$BASE_DIR\03-advanced\14-edge-computing" "Project 14: Edge Computing"
-Test-ProjectStructure "$BASE_DIR\03-advanced\15-enterprise-platform" "Project 15: Enterprise Platform"
+Test-ProjectStructure "$BASE_DIR\03-advanced\21-multi-cluster-management" "Project 21: Multi-cluster Management"
+Test-ProjectStructure "$BASE_DIR\03-advanced\22-custom-controllers" "Project 22: Custom Controllers"
+Test-ProjectStructure "$BASE_DIR\03-advanced\23-ml-pipeline" "Project 23: ML Pipeline"
+Test-ProjectStructure "$BASE_DIR\03-advanced\24-edge-computing" "Project 24: Edge Computing"
+Test-ProjectStructure "$BASE_DIR\03-advanced\25-enterprise-platform" "Project 25: Enterprise Platform"
 
 Write-Host "Completeness check finished!" -ForegroundColor Cyan

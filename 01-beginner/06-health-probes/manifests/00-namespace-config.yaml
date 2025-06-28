@@ -1,0 +1,149 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: health-demo
+  labels:
+    name: health-demo
+    purpose: health-probe-learning
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: health-demo
+data:
+  default.conf: |
+    server {
+        listen 80;
+        server_name localhost;
+        
+        root /usr/share/nginx/html;
+        index index.html index.htm;
+        
+        # Main application endpoint
+        location / {
+            try_files $uri $uri/ =404;
+        }
+        
+        # Health check endpoint for liveness
+        location /health {
+            access_log off;
+            return 200 "Healthy\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Readiness check endpoint
+        location /ready {
+            access_log off;
+            return 200 "Ready\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Status endpoint with more details
+        location /status {
+            access_log off;
+            return 200 "OK - Health Demo Application Running\n";
+            add_header Content-Type text/plain;
+        }
+        
+        # Nginx status for monitoring
+        location /nginx_status {
+            stub_status on;
+            access_log off;
+            allow 127.0.0.1;
+            allow 10.0.0.0/8;
+            allow 172.16.0.0/12;
+            allow 192.168.0.0/16;
+            deny all;
+        }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: html-content
+  namespace: health-demo
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Health Probe Demo</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+            }
+            .container {
+                background-color: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            h1 {
+                color: #2c3e50;
+                text-align: center;
+            }
+            .probe-info {
+                background-color: #ecf0f1;
+                padding: 15px;
+                margin: 10px 0;
+                border-left: 4px solid #3498db;
+            }
+            .endpoint {
+                background-color: #e8f5e8;
+                padding: 10px;
+                margin: 5px 0;
+                border-radius: 4px;
+                font-family: monospace;
+            }
+            .healthy {
+                color: #27ae60;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🏥 Kubernetes Health Probe Demo</h1>
+            
+            <div class="probe-info">
+                <h3>📍 Application Status: <span class="healthy">HEALTHY</span></h3>
+                <p>This application demonstrates Kubernetes health probes:</p>
+                <ul>
+                    <li><strong>Startup Probe:</strong> Checks if the application has initialized (exec command)</li>
+                    <li><strong>Liveness Probe:</strong> Monitors application health (HTTP GET)</li>
+                    <li><strong>Readiness Probe:</strong> Verifies traffic readiness (TCP Socket)</li>
+                </ul>
+            </div>
+            
+            <h3>🔍 Available Endpoints:</h3>
+            <div class="endpoint">GET /health - Liveness check endpoint</div>
+            <div class="endpoint">GET /ready - Readiness check endpoint</div>
+            <div class="endpoint">GET /status - Application status</div>
+            <div class="endpoint">GET /nginx_status - Nginx metrics</div>
+            
+            <h3>🧪 Testing Commands:</h3>
+            <div class="endpoint">kubectl get pods -n health-demo -w</div>
+            <div class="endpoint">kubectl describe pod &lt;pod-name&gt; -n health-demo</div>
+            <div class="endpoint">kubectl port-forward service/health-app-service 8080:80 -n health-demo</div>
+            
+            <p style="text-align: center; margin-top: 30px; color: #7f8c8d;">
+                <small>Pod: <span id="hostname">Unknown</span> | Time: <span id="timestamp"></span></small>
+            </p>
+        </div>
+        
+        <script>
+            // Update timestamp
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+            
+            // Try to get hostname (won't work in browser but shows the concept)
+            document.getElementById('hostname').textContent = window.location.hostname || 'Browser';
+        </script>
+    </body>
+    </html>
