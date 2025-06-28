@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: html-config
+  namespace: config-management
+  labels:
+    app: config-demo
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Configuration Management Demo</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 40px; 
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                color: white;
+            }
+            .container { 
+                max-width: 900px; 
+                margin: 0 auto; 
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }
+            .config-section {
+                background: rgba(255,255,255,0.2);
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+                border-left: 4px solid #ffd700;
+            }
+            .secret-section {
+                background: rgba(255,0,0,0.2);
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+                border-left: 4px solid #ff4444;
+            }
+            h1 { color: #fff; text-align: center; }
+            h2 { color: #ffd700; }
+            .highlight { color: #ffd700; font-weight: bold; }
+            .env-var { 
+                background: rgba(0,0,0,0.3); 
+                padding: 10px; 
+                margin: 5px 0; 
+                border-radius: 3px;
+                font-family: monospace;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🔧 Configuration Management Demo</h1>
+            
+            <div class="config-section">
+                <h2>📄 ConfigMap Data</h2>
+                <div class="env-var">DATABASE_HOST: ${DATABASE_HOST}</div>
+                <div class="env-var">DATABASE_PORT: ${DATABASE_PORT}</div>
+                <div class="env-var">DATABASE_NAME: ${DATABASE_NAME}</div>
+                <div class="env-var">LOG_LEVEL: ${LOG_LEVEL}</div>
+                <p><strong>Note:</strong> These values come from ConfigMap environment variables.</p>
+            </div>
+            
+            <div class="secret-section">
+                <h2>🔐 Secret Data</h2>
+                <div class="env-var">DATABASE_PASSWORD: [HIDDEN]</div>
+                <div class="env-var">API_KEY: [HIDDEN]</div>
+                <p><strong>Note:</strong> Secret values are mounted as environment variables but hidden for security.</p>
+            </div>
+            
+            <div class="config-section">
+                <h2>📁 Mounted Files</h2>
+                <p><strong>Configuration files are mounted at:</strong></p>
+                <ul>
+                    <li>/etc/config/ - All ConfigMap data as files</li>
+                    <li>/etc/nginx/nginx.conf - Nginx configuration</li>
+                    <li>/etc/secrets/ - Secret data as files (read-only)</li>
+                </ul>
+            </div>
+            
+            <div class="config-section">
+                <h2>🚀 Learn More</h2>
+                <p>This demo shows different ways to inject configuration into pods:</p>
+                <ul>
+                    <li><strong>Environment Variables:</strong> From ConfigMaps and Secrets</li>
+                    <li><strong>Volume Mounts:</strong> Files from ConfigMaps and Secrets</li>
+                    <li><strong>subPath:</strong> Mount specific files from ConfigMaps</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+    </html>

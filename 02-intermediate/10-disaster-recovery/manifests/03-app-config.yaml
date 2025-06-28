@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: disaster-recovery
+  labels:
+    app: critical-app
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Disaster Recovery Demo</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 40px; 
+                background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+                color: white;
+            }
+            .container { 
+                max-width: 800px; 
+                margin: 0 auto; 
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }
+            .critical-warning {
+                background: rgba(255,0,0,0.3);
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+                border-left: 4px solid #ff4444;
+            }
+            .backup-info {
+                background: rgba(0,255,0,0.3);
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+                border-left: 4px solid #44ff44;
+            }
+            h1 { color: #fff; text-align: center; }
+            h2 { color: #ffd700; }
+            .highlight { color: #ffd700; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🆘 Disaster Recovery Demo</h1>
+            
+            <div class="critical-warning">
+                <h2>⚠️ Critical Application</h2>
+                <p>This application contains critical data that must be backed up and recoverable.</p>
+                <p><strong>Data Location:</strong> /app/data</p>
+                <p><strong>Environment:</strong> Production</p>
+            </div>
+            
+            <div class="backup-info">
+                <h2>💾 Backup Information</h2>
+                <p>This application is configured for disaster recovery with:</p>
+                <ul>
+                    <li><strong>Velero Backup:</strong> Automated backups every 6 hours</li>
+                    <li><strong>Volume Snapshots:</strong> Persistent data backup</li>
+                    <li><strong>Configuration Backup:</strong> ConfigMaps and Secrets</li>
+                    <li><strong>RBAC Backup:</strong> Service accounts and permissions</li>
+                </ul>
+            </div>
+            
+            <div class="backup-info">
+                <h2>🔄 Recovery Scenarios</h2>
+                <p>This demo covers recovery from:</p>
+                <ul>
+                    <li>Pod failures (automatic restart)</li>
+                    <li>Node failures (rescheduling)</li>
+                    <li>Data corruption (volume restore)</li>
+                    <li>Complete cluster loss (full restore)</li>
+                </ul>
+            </div>
+            
+            <div class="critical-warning">
+                <h2>🕐 Last Backup</h2>
+                <p id="backup-time">Checking backup status...</p>
+                <p><strong>Next Backup:</strong> <span id="next-backup">In 6 hours</span></p>
+            </div>
+        </div>
+        
+        <script>
+            document.getElementById('backup-time').textContent = 
+                'Last backup: ' + new Date().toISOString();
+        </script>
+    </body>
+    </html>

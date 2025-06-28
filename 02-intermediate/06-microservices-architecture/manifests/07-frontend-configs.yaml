@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: microservices
+  labels:
+    app: frontend
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Microservices Demo</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+            .container { max-width: 1200px; margin: 0 auto; }
+            .service-card { 
+                background: white; 
+                padding: 20px; 
+                margin: 20px 0; 
+                border-radius: 8px; 
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                border-left: 4px solid #007acc;
+            }
+            .api-response { 
+                background: #f8f9fa; 
+                padding: 15px; 
+                border-radius: 4px; 
+                margin: 10px 0;
+                font-family: monospace;
+                border: 1px solid #e9ecef;
+            }
+            button { 
+                background: #007acc; 
+                color: white; 
+                border: none; 
+                padding: 10px 20px; 
+                border-radius: 4px; 
+                cursor: pointer;
+                margin: 5px;
+            }
+            button:hover { background: #005a9e; }
+            h1 { color: #333; text-align: center; }
+            h2 { color: #007acc; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🏗️ Microservices Architecture Demo</h1>
+            
+            <div class="service-card">
+                <h2>👥 User Service</h2>
+                <button onclick="callService('/api/users')">Get Users</button>
+                <button onclick="callService('/api/users/123')">Get User by ID</button>
+                <div id="user-response" class="api-response"></div>
+            </div>
+            
+            <div class="service-card">
+                <h2>📦 Order Service</h2>
+                <button onclick="callService('/api/orders')">Get Orders</button>
+                <button onclick="callService('/api/orders/456')">Get Order by ID</button>
+                <div id="order-response" class="api-response"></div>
+            </div>
+            
+            <div class="service-card">
+                <h2>🛍️ Product Service</h2>
+                <button onclick="callService('/api/products')">Get Products</button>
+                <button onclick="callService('/api/products/789')">Get Product by ID</button>
+                <div id="product-response" class="api-response"></div>
+            </div>
+            
+            <div class="service-card">
+                <h2>🌐 API Gateway</h2>
+                <p>All requests are routed through the API Gateway which forwards them to appropriate microservices.</p>
+                <button onclick="callService('/health')">Health Check</button>
+                <div id="gateway-response" class="api-response"></div>
+            </div>
+        </div>
+        
+        <script>
+            function callService(endpoint) {
+                const responseElement = getResponseElement(endpoint);
+                responseElement.innerHTML = 'Loading...';
+                
+                fetch(endpoint)
+                    .then(response => response.text())
+                    .then(data => {
+                        responseElement.innerHTML = data;
+                    })
+                    .catch(error => {
+                        responseElement.innerHTML = 'Error: ' + error.message;
+                    });
+            }
+            
+            function getResponseElement(endpoint) {
+                if (endpoint.includes('users')) return document.getElementById('user-response');
+                if (endpoint.includes('orders')) return document.getElementById('order-response');
+                if (endpoint.includes('products')) return document.getElementById('product-response');
+                return document.getElementById('gateway-response');
+            }
+        </script>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: microservices
+  labels:
+    app: frontend
+data:
+  default.conf: |
+    upstream api_backend {
+        server api-service:8080;
+    }
+    
+    server {
+        listen 80;
+        
+        location / {
+            root /usr/share/nginx/html;
+            try_files $uri $uri/ /index.html;
+        }
+        
+        location /api/ {
+            proxy_pass http://api_backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }

@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: config-management
+  labels:
+    app: config-demo
+data:
+  # Application configuration
+  database-host: "postgres.database.svc.cluster.local"
+  database-port: "5432"
+  database-name: "myapp"
+  log-level: "INFO"
+  feature-flags: |
+    enable_new_ui=true
+    enable_analytics=false
+    max_connections=100
+  # Configuration file
+  app.properties: |
+    # Application Properties
+    server.port=8080
+    server.host=0.0.0.0
+    
+    # Database Configuration
+    db.host=${DATABASE_HOST}
+    db.port=${DATABASE_PORT}
+    db.name=${DATABASE_NAME}
+    
+    # Logging
+    logging.level=${LOG_LEVEL}
+    logging.file=/var/log/app.log
+    
+    # Features
+    features.new_ui=true
+    features.analytics=false
+  # Nginx configuration
+  nginx.conf: |
+    events {
+        worker_connections 1024;
+    }
+    http {
+        upstream backend {
+            server app-service:8080;
+        }
+        server {
+            listen 80;
+            location / {
+                proxy_pass http://backend;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+            location /health {
+                return 200 "OK";
+                add_header Content-Type text/plain;
+            }
+        }
+    }

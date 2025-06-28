@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform-system
+  labels:
+    app: enterprise-platform
+    project: kubernetes-learning
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-alpha
+  labels:
+    tenant: alpha
+    environment: production
+    cost-center: "engineering"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-beta
+  labels:
+    tenant: beta
+    environment: staging
+    cost-center: "marketing"

@@ -1,0 +1,142 @@
+# Database Initialization Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init-job
+  labels:
+    app: db-init
+spec:
+  template:
+    metadata:
+      labels:
+        app: db-init
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-postgres
+        image: postgres:13
+        command: ['sh', '-c']
+        args:
+          - |
+            echo "Waiting for PostgreSQL to be ready..."
+            until pg_isready -h postgres-service -p 5432 -U postgres; do
+              echo "PostgreSQL is not ready yet. Waiting..."
+              sleep 2
+            done
+            echo "PostgreSQL is ready!"
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+      containers:
+      - name: db-init
+        image: postgres:13
+        command: ['sh', '-c']
+        args:
+          - |
+            echo "Starting database initialization..."
+            
+            # Create tables
+            psql -h postgres-service -U postgres -d todoapp << 'EOF'
+            
+            -- Create todos table
+            CREATE TABLE IF NOT EXISTS todos (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                completed BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Create users table
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50) UNIQUE NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            
+            -- Create user_todos junction table
+            CREATE TABLE IF NOT EXISTS user_todos (
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                todo_id INTEGER REFERENCES todos(id) ON DELETE CASCADE,
+                PRIMARY KEY (user_id, todo_id)
+            );
+            
+            -- Create indexes for better performance
+            CREATE INDEX IF NOT EXISTS idx_todos_completed ON todos(completed);
+            CREATE INDEX IF NOT EXISTS idx_todos_created_at ON todos(created_at);
+            CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+            CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+            
+            -- Insert sample data
+            INSERT INTO users (username, email, password_hash) VALUES
+                ('john_doe', 'john@example.com', '$2b$10$hash1'),
+                ('jane_smith', 'jane@example.com', '$2b$10$hash2')
+            ON CONFLICT (username) DO NOTHING;
+            
+            INSERT INTO todos (title, description, completed) VALUES
+                ('Setup Kubernetes cluster', 'Initialize a new Kubernetes cluster for development', true),
+                ('Deploy PostgreSQL', 'Set up PostgreSQL database with persistent storage', true),
+                ('Create API endpoints', 'Build REST API for todo management', false),
+                ('Implement authentication', 'Add user authentication and authorization', false),
+                ('Setup monitoring', 'Configure Prometheus and Grafana for monitoring', false),
+                ('Write documentation', 'Document the deployment process and API', false)
+            ON CONFLICT DO NOTHING;
+            
+            -- Create a view for user todos
+            CREATE OR REPLACE VIEW user_todo_view AS
+            SELECT 
+                u.username,
+                t.id,
+                t.title,
+                t.description,
+                t.completed,
+                t.created_at,
+                t.updated_at
+            FROM users u
+            JOIN user_todos ut ON u.id = ut.user_id
+            JOIN todos t ON ut.todo_id = t.id;
+            
+            -- Create a function to update updated_at timestamp
+            CREATE OR REPLACE FUNCTION update_updated_at_column()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = CURRENT_TIMESTAMP;
+                RETURN NEW;
+            END;
+            $$ language 'plpgsql';
+            
+            -- Create trigger for todos table
+            DROP TRIGGER IF EXISTS update_todos_updated_at ON todos;
+            CREATE TRIGGER update_todos_updated_at
+                BEFORE UPDATE ON todos
+                FOR EACH ROW
+                EXECUTE FUNCTION update_updated_at_column();
+            
+            -- Grant permissions
+            GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+            GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
+            
+            -- Display initialization summary
+            SELECT 'Database initialization completed!' as status;
+            SELECT 'Tables created:' as info;
+            SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
+            SELECT 'Sample data inserted:' as info;
+            SELECT COUNT(*) as todo_count FROM todos;
+            SELECT COUNT(*) as user_count FROM users;
+            
+            EOF
+            
+            echo "Database initialization completed successfully!"
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+      backoffLimit: 3

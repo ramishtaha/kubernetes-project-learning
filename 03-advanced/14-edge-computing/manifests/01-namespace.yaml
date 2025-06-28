@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: edge-computing
+  labels:
+    app: edge-computing-demo
+    project: kubernetes-learning

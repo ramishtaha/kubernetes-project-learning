@@ -1,0 +1,130 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: webapps.apps.example.com
+  labels:
+    app: webapp-operator
+spec:
+  group: apps.example.com
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              replicas:
+                type: integer
+                minimum: 1
+                maximum: 10
+                default: 3
+              image:
+                type: string
+                default: "nginx:1.21"
+              port:
+                type: integer
+                default: 80
+              resources:
+                type: object
+                properties:
+                  requests:
+                    type: object
+                    properties:
+                      cpu:
+                        type: string
+                        default: "100m"
+                      memory:
+                        type: string
+                        default: "128Mi"
+                  limits:
+                    type: object
+                    properties:
+                      cpu:
+                        type: string
+                        default: "200m"
+                      memory:
+                        type: string
+                        default: "256Mi"
+              ingress:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                    default: false
+                  host:
+                    type: string
+                  tls:
+                    type: boolean
+                    default: false
+              autoscaling:
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
+                    default: false
+                  minReplicas:
+                    type: integer
+                    default: 2
+                  maxReplicas:
+                    type: integer
+                    default: 10
+                  targetCPUUtilization:
+                    type: integer
+                    default: 70
+            required:
+            - replicas
+            - image
+          status:
+            type: object
+            properties:
+              conditions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    status:
+                      type: string
+                    lastTransitionTime:
+                      type: string
+                    reason:
+                      type: string
+                    message:
+                      type: string
+              replicas:
+                type: integer
+              readyReplicas:
+                type: integer
+              phase:
+                type: string
+                enum: ["Pending", "Running", "Failed"]
+    subresources:
+      status: {}
+      scale:
+        specReplicasPath: .spec.replicas
+        statusReplicasPath: .status.replicas
+    additionalPrinterColumns:
+    - name: Replicas
+      type: integer
+      jsonPath: .spec.replicas
+    - name: Ready
+      type: integer
+      jsonPath: .status.readyReplicas
+    - name: Phase
+      type: string
+      jsonPath: .status.phase
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+  scope: Namespaced
+  names:
+    plural: webapps
+    singular: webapp
+    kind: WebApp
+    shortNames:
+    - wa

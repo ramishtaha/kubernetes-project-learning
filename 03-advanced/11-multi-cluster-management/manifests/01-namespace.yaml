@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: multi-cluster
+  labels:
+    app: multi-cluster-demo
+    project: kubernetes-learning

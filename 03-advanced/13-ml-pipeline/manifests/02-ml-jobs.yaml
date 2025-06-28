@@ -1,0 +1,122 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-preprocessing
+  namespace: ml-pipeline
+  labels:
+    app: ml-pipeline
+    component: data-preprocessing
+spec:
+  template:
+    metadata:
+      labels:
+        app: ml-pipeline
+        component: data-preprocessing
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: preprocessing
+        image: python:3.9-slim
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          pip install pandas numpy scikit-learn
+          python /scripts/preprocess_data.py
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        - name: scripts-volume
+          mountPath: /scripts
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: ml-data-pvc
+      - name: scripts-volume
+        configMap:
+          name: ml-scripts
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: model-training
+  namespace: ml-pipeline
+  labels:
+    app: ml-pipeline
+    component: model-training
+spec:
+  template:
+    metadata:
+      labels:
+        app: ml-pipeline
+        component: model-training
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: training
+        image: tensorflow/tensorflow:2.12.0
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          pip install scikit-learn pandas
+          python /scripts/train_model.py
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        - name: model-volume
+          mountPath: /models
+        - name: scripts-volume
+          mountPath: /scripts
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: ml-data-pvc
+      - name: model-volume
+        persistentVolumeClaim:
+          claimName: ml-models-pvc
+      - name: scripts-volume
+        configMap:
+          name: ml-scripts
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ml-data-pvc
+  namespace: ml-pipeline
+  labels:
+    app: ml-pipeline
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ml-models-pvc
+  namespace: ml-pipeline
+  labels:
+    app: ml-pipeline
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

@@ -1,0 +1,50 @@
+# Storage Class and PersistentVolume Configuration
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: postgres-storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "false"
+provisioner: k8s.io/minikube-hostpath  # Use appropriate provisioner for your cluster
+parameters:
+  type: pd-standard
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: Immediate
+
+---
+# PersistentVolume for development (manual provisioning)
+# In production, use dynamic provisioning with StorageClass
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  labels:
+    app: postgres
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: postgres-storage
+  hostPath:
+    path: /data/postgres  # For minikube/local development
+    type: DirectoryOrCreate
+
+---
+# Secret for PostgreSQL credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  labels:
+    app: postgres
+type: Opaque
+data:
+  # postgres
+  username: cG9zdGdyZXM=
+  # securePassword123
+  password: c2VjdXJlUGFzc3dvcmQxMjM=
+  # todoapp
+  database: dG9kb2FwcA==

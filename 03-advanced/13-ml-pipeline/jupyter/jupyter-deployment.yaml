@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyter-notebook
+  namespace: ml-pipeline
+  labels:
+    app: jupyter-notebook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jupyter-notebook
+  template:
+    metadata:
+      labels:
+        app: jupyter-notebook
+    spec:
+      containers:
+      - name: jupyter
+        image: jupyter/tensorflow-notebook:latest
+        ports:
+        - containerPort: 8888
+        env:
+        - name: JUPYTER_ENABLE_LAB
+          value: "yes"
+        - name: JUPYTER_TOKEN
+          value: "kubernetes-ml-demo"
+        - name: GRANT_SUDO
+          value: "yes"
+        volumeMounts:
+        - name: jupyter-data
+          mountPath: /home/jovyan/work
+        - name: notebooks
+          mountPath: /home/jovyan/notebooks
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8888
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8888
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: jupyter-data
+        persistentVolumeClaim:
+          claimName: jupyter-data-pvc
+      - name: notebooks
+        configMap:
+          name: sample-notebooks
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jupyter-data-pvc
+  namespace: ml-pipeline
+  labels:
+    app: jupyter-notebook
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jupyter-service
+  namespace: ml-pipeline
+  labels:
+    app: jupyter-notebook
+spec:
+  type: ClusterIP
+  selector:
+    app: jupyter-notebook
+  ports:
+  - name: http
+    port: 8888
+    targetPort: 8888

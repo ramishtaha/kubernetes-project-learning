@@ -1,0 +1,76 @@
+name: Validate Projects
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-yaml:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+    
+    - name: Validate YAML files
+      run: |
+        echo "🔍 Validating Kubernetes YAML files..."
+        find . -name "*.yaml" -o -name "*.yml" | while read file; do
+          echo "Validating $file"
+          kubectl apply --dry-run=client -f "$file" || exit 1
+        done
+        echo "✅ All YAML files are valid"
+    
+    - name: Check project structure
+      run: |
+        echo "🔍 Checking project structure..."
+        for project in 01-beginner 02-intermediate 03-advanced; do
+          for subproject in $project/*/; do
+            if [ -d "$subproject" ]; then
+              echo "Checking $subproject"
+              
+              # Check for required files
+              if [ ! -f "$subproject/README.md" ]; then
+                echo "❌ Missing README.md in $subproject"
+                exit 1
+              fi
+              
+              if [ ! -d "$subproject/manifests" ]; then
+                echo "❌ Missing manifests/ directory in $subproject"
+                exit 1
+              fi
+              
+              if [ ! -d "$subproject/scripts" ]; then
+                echo "❌ Missing scripts/ directory in $subproject"
+                exit 1
+              fi
+              
+              echo "✅ $subproject structure is valid"
+            fi
+          done
+        done
+        echo "✅ All project structures are valid"
+    
+    - name: Check for broken links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        use-verbose-mode: 'yes'
+        config-file: '.github/mlc_config.json'
+        
+  lint-markdown:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Lint Markdown files
+      uses: DavidAnson/markdownlint-cli2-action@v13
+      with:
+        globs: '**/*.md'

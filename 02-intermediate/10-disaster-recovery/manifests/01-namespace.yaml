@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: disaster-recovery
+  labels:
+    app: disaster-recovery-demo
+    project: kubernetes-learning

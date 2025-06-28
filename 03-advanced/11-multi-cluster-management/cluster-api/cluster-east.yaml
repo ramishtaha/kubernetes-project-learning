@@ -1,0 +1,68 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: workload-cluster-east
+  namespace: multi-cluster
+  labels:
+    region: us-east-1
+    environment: production
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks: ["192.168.0.0/16"]
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: AWSCluster
+    name: workload-cluster-east
+  controlPlaneRef:
+    kind: KubeadmControlPlane
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    name: workload-cluster-east-control-plane
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: AWSCluster
+metadata:
+  name: workload-cluster-east
+  namespace: multi-cluster
+spec:
+  region: us-east-1
+  sshKeyName: cluster-api-keypair
+  networkSpec:
+    vpc:
+      cidrBlock: "10.0.0.0/16"
+    subnets:
+    - availabilityZone: us-east-1a
+      cidrBlock: "10.0.1.0/24"
+      isPublic: true
+    - availabilityZone: us-east-1b
+      cidrBlock: "10.0.2.0/24"
+      isPublic: true
+    - availabilityZone: us-east-1c
+      cidrBlock: "10.0.3.0/24"
+      isPublic: false
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: workload-cluster-east-control-plane
+  namespace: multi-cluster
+spec:
+  version: v1.28.0
+  replicas: 3
+  machineTemplate:
+    infrastructureRef:
+      kind: AWSMachineTemplate
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+      name: workload-cluster-east-control-plane
+  kubeadmConfigSpec:
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: aws
+    clusterConfiguration:
+      apiServer:
+        extraArgs:
+          cloud-provider: aws
+      controllerManager:
+        extraArgs:
+          cloud-provider: aws

@@ -1,0 +1,133 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: controller-config
+  namespace: multi-cluster
+  labels:
+    app: multi-cluster-controller
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Multi-Cluster Management</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 40px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+            .container { 
+                max-width: 1200px; 
+                margin: 0 auto; 
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }
+            .cluster-card {
+                background: rgba(255,255,255,0.2);
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+                border-left: 4px solid #ffd700;
+            }
+            .status-healthy { border-left-color: #44ff44; }
+            .status-warning { border-left-color: #ffff44; }
+            .status-error { border-left-color: #ff4444; }
+            h1 { color: #fff; text-align: center; }
+            h2 { color: #ffd700; }
+            .highlight { color: #ffd700; font-weight: bold; }
+            .metric { 
+                background: rgba(0,0,0,0.3); 
+                padding: 10px; 
+                margin: 5px 0; 
+                border-radius: 3px;
+                font-family: monospace;
+                display: inline-block;
+                min-width: 200px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🌐 Multi-Cluster Management Dashboard</h1>
+            
+            <div class="cluster-card status-healthy">
+                <h2>🏢 Management Cluster</h2>
+                <div class="metric">Status: <span class="highlight">Healthy</span></div>
+                <div class="metric">Nodes: <span class="highlight">3</span></div>
+                <div class="metric">Pods: <span class="highlight">42</span></div>
+                <div class="metric">CPU Usage: <span class="highlight">65%</span></div>
+                <div class="metric">Memory Usage: <span class="highlight">72%</span></div>
+                <p><strong>Role:</strong> Central management and GitOps controller</p>
+            </div>
+            
+            <div class="cluster-card status-healthy">
+                <h2>🌅 East Cluster</h2>
+                <div class="metric">Status: <span class="highlight">Healthy</span></div>
+                <div class="metric">Nodes: <span class="highlight">5</span></div>
+                <div class="metric">Pods: <span class="highlight">128</span></div>
+                <div class="metric">CPU Usage: <span class="highlight">45%</span></div>
+                <div class="metric">Memory Usage: <span class="highlight">58%</span></div>
+                <p><strong>Region:</strong> us-east-1 | <strong>Workload:</strong> Production APIs</p>
+            </div>
+            
+            <div class="cluster-card status-warning">
+                <h2>🌄 West Cluster</h2>
+                <div class="metric">Status: <span class="highlight">Warning</span></div>
+                <div class="metric">Nodes: <span class="highlight">4</span></div>
+                <div class="metric">Pods: <span class="highlight">95</span></div>
+                <div class="metric">CPU Usage: <span class="highlight">85%</span></div>
+                <div class="metric">Memory Usage: <span class="highlight">78%</span></div>
+                <p><strong>Region:</strong> us-west-2 | <strong>Workload:</strong> Data Processing</p>
+            </div>
+            
+            <div class="cluster-card">
+                <h2>📊 Cross-Cluster Services</h2>
+                <ul>
+                    <li><strong>Service Mesh:</strong> Istio with cross-cluster communication</li>
+                    <li><strong>Monitoring:</strong> Prometheus federation across clusters</li>
+                    <li><strong>Logging:</strong> Centralized logging with Fluentd</li>
+                    <li><strong>GitOps:</strong> ArgoCD managing multi-cluster deployments</li>
+                    <li><strong>Networking:</strong> Submariner for cross-cluster networking</li>
+                </ul>
+            </div>
+            
+            <div class="cluster-card">
+                <h2>🔄 Workload Distribution</h2>
+                <p>Current strategy: Active-Active with regional failover</p>
+                <ul>
+                    <li>User-facing APIs: Both clusters (load balanced)</li>
+                    <li>Database: Primary in East, replica in West</li>
+                    <li>Batch jobs: Scheduled across both clusters</li>
+                    <li>ML workloads: GPU-enabled nodes in West cluster</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+    </html>
+  cluster-config.yaml: |
+    clusters:
+      management:
+        role: management
+        region: us-central
+        kubeconfig: /etc/kubeconfigs/management
+      east:
+        role: workload
+        region: us-east-1
+        kubeconfig: /etc/kubeconfigs/east
+      west:
+        role: workload
+        region: us-west-2
+        kubeconfig: /etc/kubeconfigs/west
+    policies:
+      workload_distribution:
+        strategy: "active-active"
+        primary_region: "us-east-1"
+        failover_region: "us-west-2"
+      resource_quotas:
+        cpu_limit: "1000m"
+        memory_limit: "2Gi"
+        storage_limit: "100Gi"

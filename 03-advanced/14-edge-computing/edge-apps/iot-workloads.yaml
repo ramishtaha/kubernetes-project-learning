@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-data-processor
+  namespace: edge-computing
+  labels:
+    app: iot-data-processor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-data-processor
+  template:
+    metadata:
+      labels:
+        app: iot-data-processor
+    spec:
+      containers:
+      - name: processor
+        image: python:3.9-slim
+        command: ["/bin/bash"]
+        args:
+        - -c
+        - |
+          pip install paho-mqtt influxdb-client
+          python /app/iot_processor.py
+        env:
+        - name: MQTT_BROKER
+          value: "mqtt-broker-service"
+        - name: MQTT_PORT
+          value: "1883"
+        - name: INFLUXDB_URL
+          value: "http://influxdb-service:8086"
+        volumeMounts:
+        - name: processor-code
+          mountPath: /app
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: processor-code
+        configMap:
+          name: iot-processor-code
+      nodeSelector:
+        hardware-type: "edge-server"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-broker
+  namespace: edge-computing
+  labels:
+    app: mqtt-broker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-broker
+  template:
+    metadata:
+      labels:
+        app: mqtt-broker
+    spec:
+      containers:
+      - name: mosquitto
+        image: eclipse-mosquitto:2.0
+        ports:
+        - containerPort: 1883
+        - containerPort: 9001
+        volumeMounts:
+        - name: mosquitto-config
+          mountPath: /mosquitto/config
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+      - name: mosquitto-config
+        configMap:
+          name: mosquitto-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqtt-broker-service
+  namespace: edge-computing
+  labels:
+    app: mqtt-broker
+spec:
+  type: ClusterIP
+  selector:
+    app: mqtt-broker
+  ports:
+  - name: mqtt
+    port: 1883
+    targetPort: 1883
+  - name: websocket
+    port: 9001
+    targetPort: 9001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-processor-service
+  namespace: edge-computing
+  labels:
+    app: iot-data-processor
+spec:
+  type: ClusterIP
+  selector:
+    app: iot-data-processor
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080

@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: operator-config
+  namespace: webapp-operator-system
+  labels:
+    app: webapp-operator
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>WebApp Operator Dashboard</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 40px; 
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                color: white;
+            }
+            .container { 
+                max-width: 1000px; 
+                margin: 0 auto; 
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }
+            .webapp-card {
+                background: rgba(255,255,255,0.2);
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+                border-left: 4px solid #ffd700;
+            }
+            .status-running { border-left-color: #44ff44; }
+            .status-pending { border-left-color: #ffff44; }
+            .status-failed { border-left-color: #ff4444; }
+            h1 { color: #fff; text-align: center; }
+            h2 { color: #ffd700; }
+            .highlight { color: #ffd700; font-weight: bold; }
+            .metric { 
+                background: rgba(0,0,0,0.3); 
+                padding: 8px 12px; 
+                margin: 5px 0; 
+                border-radius: 3px;
+                font-family: monospace;
+                display: inline-block;
+                min-width: 150px;
+            }
+            .code-block {
+                background: rgba(0,0,0,0.5);
+                padding: 15px;
+                border-radius: 5px;
+                font-family: monospace;
+                font-size: 14px;
+                overflow-x: auto;
+                margin: 10px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🔧 WebApp Operator Dashboard</h1>
+            
+            <div class="webapp-card">
+                <h2>📊 Operator Status</h2>
+                <div class="metric">Status: <span class="highlight">Running</span></div>
+                <div class="metric">Reconcile Rate: <span class="highlight">5/min</span></div>
+                <div class="metric">Managed WebApps: <span class="highlight">3</span></div>
+                <div class="metric">Last Reconcile: <span class="highlight">30s ago</span></div>
+                <p><strong>Function:</strong> Manages WebApp custom resources and their lifecycle</p>
+            </div>
+            
+            <div class="webapp-card status-running">
+                <h2>🌐 WebApp: my-frontend</h2>
+                <div class="metric">Phase: <span class="highlight">Running</span></div>
+                <div class="metric">Replicas: <span class="highlight">3/3</span></div>
+                <div class="metric">Image: <span class="highlight">nginx:1.21</span></div>
+                <div class="metric">Ingress: <span class="highlight">Enabled</span></div>
+                <div class="metric">Autoscaling: <span class="highlight">Active</span></div>
+            </div>
+            
+            <div class="webapp-card status-running">
+                <h2>🔧 WebApp: api-service</h2>
+                <div class="metric">Phase: <span class="highlight">Running</span></div>
+                <div class="metric">Replicas: <span class="highlight">2/2</span></div>
+                <div class="metric">Image: <span class="highlight">httpd:2.4</span></div>
+                <div class="metric">Ingress: <span class="highlight">Disabled</span></div>
+                <div class="metric">Autoscaling: <span class="highlight">Disabled</span></div>
+            </div>
+            
+            <div class="webapp-card status-pending">
+                <h2>⏳ WebApp: worker-app</h2>
+                <div class="metric">Phase: <span class="highlight">Pending</span></div>
+                <div class="metric">Replicas: <span class="highlight">0/5</span></div>
+                <div class="metric">Image: <span class="highlight">custom-worker:v1.2</span></div>
+                <div class="metric">Issue: <span class="highlight">ImagePullBackOff</span></div>
+            </div>
+            
+            <div class="webapp-card">
+                <h2>📝 Create a WebApp</h2>
+                <p>Use the custom resource to deploy a new application:</p>
+                <div class="code-block">kubectl apply -f - &lt;&lt;EOF
+apiVersion: apps.example.com/v1
+kind: WebApp
+metadata:
+  name: my-app
+  namespace: default
+spec:
+  replicas: 3
+  image: nginx:1.21
+  port: 80
+  ingress:
+    enabled: true
+    host: my-app.local
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilization: 70
+EOF</div>
+            </div>
+            
+            <div class="webapp-card">
+                <h2>🎛️ Operator Features</h2>
+                <ul>
+                    <li><strong>Deployment Management:</strong> Automatically creates and manages Deployments</li>
+                    <li><strong>Service Creation:</strong> Exposes applications with Services</li>
+                    <li><strong>Ingress Support:</strong> Optional external access configuration</li>
+                    <li><strong>Auto Scaling:</strong> HPA integration for dynamic scaling</li>
+                    <li><strong>Status Reporting:</strong> Real-time status updates in custom resource</li>
+                    <li><strong>Event Generation:</strong> Kubernetes events for operational visibility</li>
+                    <li><strong>Finalizers:</strong> Proper cleanup on resource deletion</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+    </html>
+  healthz: "OK"
+  readyz: "Ready"

@@ -1,0 +1,225 @@
+# Multi-Container Pod with Init Container
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webapp-pod
+  labels:
+    app: webapp
+    tier: frontend
+spec:
+  # Init container runs before main containers
+  initContainers:
+  - name: init-setup
+    image: busybox:1.35
+    command: ['sh', '-c']
+    args:
+      - |
+        echo "Initializing application..."
+        echo "Checking dependencies..."
+        sleep 5
+        echo "Creating shared directory structure..."
+        mkdir -p /shared-data/logs
+        mkdir -p /shared-data/cache
+        echo "Setup completed successfully!"
+        echo "$(date): Init container completed" > /shared-data/init.log
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared-data
+  
+  # Main application containers
+  containers:
+  # Frontend Container (React App)
+  - name: frontend
+    image: node:18-alpine
+    command: ['sh', '-c']
+    args:
+      - |
+        echo "Starting frontend application..."
+        npm install -g serve
+        echo '<!DOCTYPE html>
+        <html>
+        <head><title>Multi-Container App</title></head>
+        <body>
+          <h1>Welcome to Multi-Container App!</h1>
+          <p>Frontend served by React container</p>
+          <button onclick="fetch(\"/api/status\").then(r=>r.text()).then(t=>document.getElementById(\"api\").innerText=t)">Test API</button>
+          <div id="api"></div>
+        </body>
+        </html>' > /app/index.html
+        serve -s /app -l 3000
+    ports:
+    - containerPort: 3000
+      name: frontend
+    env:
+    - name: NODE_ENV
+      value: "production"
+    - name: API_URL
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: api_url
+    - name: PORT
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: frontend_port
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared-data
+    - name: config-volume
+      mountPath: /etc/config
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+  
+  # Backend Container (Node.js API)
+  - name: backend
+    image: node:18-alpine
+    command: ['sh', '-c']
+    args:
+      - |
+        echo "Starting backend API server..."
+        cat > /app/server.js << 'EOF'
+        const http = require('http');
+        const url = require('url');
+        const fs = require('fs');
+        
+        const server = http.createServer((req, res) => {
+          const path = url.parse(req.url).pathname;
+          
+          // Enable CORS
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+          
+          if (path === '/api/status') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              status: 'healthy',
+              timestamp: new Date().toISOString(),
+              container: 'backend',
+              environment: process.env.NODE_ENV || 'development'
+            }));
+          } else if (path === '/api/config') {
+            try {
+              const config = fs.readFileSync('/etc/config/app.properties', 'utf8');
+              res.writeHead(200, { 'Content-Type': 'text/plain' });
+              res.end(config);
+            } catch (error) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Config not found' }));
+            }
+          } else if (path === '/api/logs') {
+            try {
+              const logs = fs.readFileSync('/shared-data/init.log', 'utf8');
+              res.writeHead(200, { 'Content-Type': 'text/plain' });
+              res.end(logs);
+            } catch (error) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Logs not found' }));
+            }
+          } else {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Not Found' }));
+          }
+        });
+        
+        const port = process.env.PORT || 3001;
+        server.listen(port, () => {
+          console.log(`Backend server running on port ${port}`);
+        });
+        EOF
+        
+        cd /app && node server.js
+    ports:
+    - containerPort: 3001
+      name: backend
+    env:
+    - name: NODE_ENV
+      value: "production"
+    - name: PORT
+      valueFrom:
+        configMapKeyRef:
+          name: app-config
+          key: backend_port
+    - name: DB_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: db_username
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: db_password
+    - name: JWT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: app-secrets
+          key: jwt_secret
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared-data
+    - name: config-volume
+      mountPath: /etc/config
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+  
+  # Sidecar Container (Nginx Proxy)
+  - name: nginx-proxy
+    image: nginx:1.21-alpine
+    ports:
+    - containerPort: 80
+      name: http
+    volumeMounts:
+    - name: nginx-config
+      mountPath: /etc/nginx/nginx.conf
+      subPath: nginx.conf
+    - name: shared-data
+      mountPath: /var/log/nginx
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "50m"
+      limits:
+        memory: "128Mi"
+        cpu: "100m"
+    livenessProbe:
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    readinessProbe:
+      httpGet:
+        path: /health
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
+  
+  # Volumes for data sharing
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+  - name: config-volume
+    configMap:
+      name: app-config
+  - name: nginx-config
+    configMap:
+      name: app-config
+      items:
+      - key: nginx.conf
+        path: nginx.conf
+  
+  # Security context
+  securityContext:
+    fsGroup: 2000

@@ -1,0 +1,31 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-backup
+  namespace: velero
+  labels:
+    app: disaster-recovery
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  template:
+    includedNamespaces:
+    - disaster-recovery
+    storageLocation: default
+    volumeSnapshotLocations:
+    - default
+    ttl: 720h0m0s  # 30 days retention
+---
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: manual-backup
+  namespace: velero
+  labels:
+    app: disaster-recovery
+spec:
+  includedNamespaces:
+  - disaster-recovery
+  storageLocation: default
+  volumeSnapshotLocations:
+  - default
+  ttl: 240h0m0s  # 10 days retention

@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  namespace: load-balancing
+  labels:
+    app: web-app
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Load Balancing Demo</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 40px; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+            .container { 
+                max-width: 800px; 
+                margin: 0 auto; 
+                text-align: center;
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }
+            .pod-info {
+                background: rgba(255,255,255,0.2);
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+            }
+            h1 { color: #fff; }
+            .highlight { color: #ffd700; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🚀 Kubernetes Load Balancing Demo</h1>
+            <div class="pod-info">
+                <h2>Pod Information</h2>
+                <p><strong>Pod Name:</strong> <span class="highlight">${POD_NAME}</span></p>
+                <p><strong>Pod IP:</strong> <span class="highlight">${POD_IP}</span></p>
+                <p><strong>Timestamp:</strong> <span class="highlight" id="timestamp"></span></p>
+            </div>
+            <p>This page is served by one of multiple nginx pods behind a Kubernetes service.</p>
+            <p>Refresh this page to see load balancing in action!</p>
+        </div>
+        <script>
+            document.getElementById('timestamp').textContent = new Date().toISOString();
+        </script>
+    </body>
+    </html>

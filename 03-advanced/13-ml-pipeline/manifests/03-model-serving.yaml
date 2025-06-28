@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-serving
+  namespace: ml-pipeline
+  labels:
+    app: model-serving
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: model-serving
+  template:
+    metadata:
+      labels:
+        app: model-serving
+    spec:
+      containers:
+      - name: serving
+        image: tensorflow/serving:2.12.0
+        ports:
+        - containerPort: 8501
+          name: rest-api
+        - containerPort: 8500
+          name: grpc
+        env:
+        - name: MODEL_NAME
+          value: "my_model"
+        - name: MODEL_BASE_PATH
+          value: "/models"
+        volumeMounts:
+        - name: model-volume
+          mountPath: /models
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /v1/models/my_model
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /v1/models/my_model
+            port: 8501
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: model-volume
+        persistentVolumeClaim:
+          claimName: ml-models-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-serving-service
+  namespace: ml-pipeline
+  labels:
+    app: model-serving
+spec:
+  type: ClusterIP
+  selector:
+    app: model-serving
+  ports:
+  - name: rest-api
+    port: 8501
+    targetPort: 8501
+  - name: grpc
+    port: 8500
+    targetPort: 8500
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: model-serving-hpa
+  namespace: ml-pipeline
+  labels:
+    app: model-serving
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: model-serving
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

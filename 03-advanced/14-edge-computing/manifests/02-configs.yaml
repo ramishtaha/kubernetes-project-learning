@@ -1,0 +1,284 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: edge-agent-config
+  namespace: edge-computing
+  labels:
+    app: edge-agent
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Edge Computing Node</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                margin: 40px; 
+                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+                color: white;
+            }
+            .container { 
+                max-width: 900px; 
+                margin: 0 auto; 
+                background: rgba(255,255,255,0.1);
+                padding: 40px;
+                border-radius: 10px;
+                backdrop-filter: blur(10px);
+            }
+            .edge-card {
+                background: rgba(255,255,255,0.2);
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+                border-left: 4px solid #e74c3c;
+            }
+            .status-online { border-left-color: #27ae60; }
+            .status-offline { border-left-color: #e74c3c; }
+            h1 { color: #fff; text-align: center; }
+            h2 { color: #e74c3c; }
+            .highlight { color: #e74c3c; font-weight: bold; }
+            .metric { 
+                background: rgba(0,0,0,0.3); 
+                padding: 8px 12px; 
+                margin: 5px 0; 
+                border-radius: 3px;
+                font-family: monospace;
+                display: inline-block;
+                min-width: 150px;
+            }
+        </style>
+        <script>
+            function updateMetrics() {
+                document.getElementById('timestamp').textContent = new Date().toISOString();
+                document.getElementById('uptime').textContent = Math.floor(Date.now() / 1000 - 1640995200) + 's';
+                
+                // Simulate changing metrics
+                document.getElementById('cpu-usage').textContent = (Math.random() * 30 + 20).toFixed(1) + '%';
+                document.getElementById('memory-usage').textContent = (Math.random() * 20 + 40).toFixed(1) + '%';
+                document.getElementById('network-rx').textContent = (Math.random() * 100 + 50).toFixed(0) + ' KB/s';
+                document.getElementById('network-tx').textContent = (Math.random() * 50 + 20).toFixed(0) + ' KB/s';
+            }
+            
+            setInterval(updateMetrics, 5000);
+            setTimeout(updateMetrics, 1000);
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🌐 Edge Computing Node</h1>
+            
+            <div class="edge-card status-online">
+                <h2>📡 Node Information</h2>
+                <div class="metric">Node: <span class="highlight">${NODE_NAME}</span></div>
+                <div class="metric">IP: <span class="highlight">${NODE_IP}</span></div>
+                <div class="metric">Location: <span class="highlight">${EDGE_LOCATION}</span></div>
+                <div class="metric">Role: <span class="highlight">Edge Agent</span></div>
+                <div class="metric">Status: <span class="highlight">Online</span></div>
+            </div>
+            
+            <div class="edge-card">
+                <h2>📊 System Metrics</h2>
+                <div class="metric">CPU Usage: <span class="highlight" id="cpu-usage">Loading...</span></div>
+                <div class="metric">Memory Usage: <span class="highlight" id="memory-usage">Loading...</span></div>
+                <div class="metric">Network RX: <span class="highlight" id="network-rx">Loading...</span></div>
+                <div class="metric">Network TX: <span class="highlight" id="network-tx">Loading...</span></div>
+                <div class="metric">Uptime: <span class="highlight" id="uptime">Loading...</span></div>
+                <div class="metric">Last Update: <span class="highlight" id="timestamp">Loading...</span></div>
+            </div>
+            
+            <div class="edge-card">
+                <h2>🔧 Edge Workloads</h2>
+                <ul>
+                    <li><strong>IoT Data Processing:</strong> Real-time sensor data aggregation</li>
+                    <li><strong>Local Caching:</strong> Content delivery optimization</li>
+                    <li><strong>Edge Analytics:</strong> Local ML inference</li>
+                    <li><strong>Device Management:</strong> IoT device orchestration</li>
+                    <li><strong>Security Gateway:</strong> Edge firewall and VPN</li>
+                </ul>
+            </div>
+            
+            <div class="edge-card">
+                <h2>🌍 Edge Computing Benefits</h2>
+                <ul>
+                    <li><strong>Low Latency:</strong> Process data close to source</li>
+                    <li><strong>Bandwidth Optimization:</strong> Reduce data transmission</li>
+                    <li><strong>Reliability:</strong> Local processing during network issues</li>
+                    <li><strong>Privacy:</strong> Keep sensitive data local</li>
+                    <li><strong>Scalability:</strong> Distributed processing power</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+  namespace: edge-computing
+  labels:
+    app: mqtt-broker
+data:
+  mosquitto.conf: |
+    # Mosquitto MQTT Broker Configuration for Edge Computing
+    
+    # Network settings
+    listener 1883
+    listener 9001
+    protocol websockets
+    
+    # Persistence
+    persistence true
+    persistence_location /mosquitto/data/
+    
+    # Logging
+    log_dest stdout
+    log_type error
+    log_type warning
+    log_type notice
+    log_type information
+    
+    # Security (basic setup for demo)
+    allow_anonymous true
+    
+    # Connection settings
+    max_connections 1000
+    connection_messages true
+    log_timestamp true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iot-processor-code
+  namespace: edge-computing
+  labels:
+    app: iot-data-processor
+data:
+  iot_processor.py: |
+    #!/usr/bin/env python3
+    import json
+    import time
+    import random
+    import os
+    from datetime import datetime
+    import paho.mqtt.client as mqtt
+    
+    # Configuration
+    MQTT_BROKER = os.getenv('MQTT_BROKER', 'localhost')
+    MQTT_PORT = int(os.getenv('MQTT_PORT', '1883'))
+    
+    # Data storage (simplified for demo)
+    processed_data = []
+    
+    def on_connect(client, userdata, flags, rc):
+        print(f"📡 Connected to MQTT broker with result code {rc}")
+        # Subscribe to IoT device topics
+        client.subscribe("sensors/+/temperature")
+        client.subscribe("sensors/+/humidity")
+        client.subscribe("sensors/+/pressure")
+        client.subscribe("devices/+/status")
+    
+    def on_message(client, userdata, msg):
+        try:
+            topic = msg.topic
+            payload = msg.payload.decode()
+            data = json.loads(payload)
+            
+            # Process the data
+            processed_record = {
+                'timestamp': datetime.now().isoformat(),
+                'topic': topic,
+                'device_id': topic.split('/')[1] if '/' in topic else 'unknown',
+                'sensor_type': topic.split('/')[2] if len(topic.split('/')) > 2 else 'unknown',
+                'value': data.get('value', 0),
+                'unit': data.get('unit', ''),
+                'processed_at_edge': True
+            }
+            
+            # Add some edge processing logic
+            if 'temperature' in topic:
+                processed_record['celsius'] = data.get('value', 0)
+                processed_record['fahrenheit'] = (data.get('value', 0) * 9/5) + 32
+                processed_record['category'] = 'hot' if data.get('value', 0) > 25 else 'cold'
+            
+            processed_data.append(processed_record)
+            
+            # Keep only last 100 records to prevent memory issues
+            if len(processed_data) > 100:
+                processed_data.pop(0)
+            
+            print(f"🔄 Processed: {topic} -> {data}")
+            
+            # Send processed data to cloud (simulated)
+            if random.random() < 0.1:  # 10% chance to send to cloud
+                print(f"☁️  Sending batch of {len(processed_data)} records to cloud")
+                
+        except Exception as e:
+            print(f"❌ Error processing message: {e}")
+    
+    def simulate_iot_devices(client):
+        """Simulate IoT devices sending data"""
+        devices = ['device001', 'device002', 'device003', 'sensor001', 'sensor002']
+        
+        while True:
+            try:
+                for device in devices:
+                    # Temperature sensor
+                    temp_data = {
+                        'value': round(random.uniform(18, 35), 2),
+                        'unit': 'celsius',
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    client.publish(f"sensors/{device}/temperature", json.dumps(temp_data))
+                    
+                    # Humidity sensor
+                    humidity_data = {
+                        'value': round(random.uniform(30, 80), 2),
+                        'unit': 'percent',
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    client.publish(f"sensors/{device}/humidity", json.dumps(humidity_data))
+                    
+                    # Device status
+                    status_data = {
+                        'status': random.choice(['online', 'online', 'online', 'offline']),
+                        'battery': random.randint(20, 100),
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    client.publish(f"devices/{device}/status", json.dumps(status_data))
+                
+                time.sleep(10)  # Send data every 10 seconds
+                
+            except Exception as e:
+                print(f"❌ Error in device simulation: {e}")
+                time.sleep(5)
+    
+    def main():
+        print("🚀 Starting IoT Data Processor...")
+        
+        # Setup MQTT client
+        client = mqtt.Client()
+        client.on_connect = on_connect
+        client.on_message = on_message
+        
+        try:
+            print(f"📡 Connecting to MQTT broker at {MQTT_BROKER}:{MQTT_PORT}")
+            client.connect(MQTT_BROKER, MQTT_PORT, 60)
+            
+            # Start MQTT loop in background
+            client.loop_start()
+            
+            # Start device simulation
+            print("🔧 Starting IoT device simulation...")
+            simulate_iot_devices(client)
+            
+        except KeyboardInterrupt:
+            print("🛑 Shutting down IoT processor...")
+            client.loop_stop()
+            client.disconnect()
+        except Exception as e:
+            print(f"❌ Error: {e}")
+    
+    if __name__ == "__main__":
+        main()

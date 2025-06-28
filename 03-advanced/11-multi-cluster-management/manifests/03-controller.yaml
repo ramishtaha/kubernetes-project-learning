@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multi-cluster-controller
+  namespace: multi-cluster
+  labels:
+    app: multi-cluster-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multi-cluster-controller
+  template:
+    metadata:
+      labels:
+        app: multi-cluster-controller
+    spec:
+      serviceAccountName: multi-cluster-controller
+      containers:
+      - name: controller
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+        env:
+        - name: CLUSTER_ROLE
+          value: "management"
+        - name: MANAGED_CLUSTERS
+          value: "east,west"
+        volumeMounts:
+        - name: kubeconfigs
+          mountPath: /etc/kubeconfigs
+          readOnly: true
+        - name: controller-config
+          mountPath: /usr/share/nginx/html
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: kubeconfigs
+        secret:
+          secretName: cluster-east-kubeconfig
+      - name: controller-config
+        configMap:
+          name: controller-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: multi-cluster-controller
+  namespace: multi-cluster
+  labels:
+    app: multi-cluster-controller
+spec:
+  type: ClusterIP
+  selector:
+    app: multi-cluster-controller
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
